@@ -83,6 +83,10 @@
                             <span id="soundIcon">🔊</span>
                             <span id="soundLabel" class="hidden sm:inline font-mono-num text-[10px]">SFX</span>
                         </button>
+                        <button id="helpToggleBtn" class="text-xs px-2 py-0.5 rounded bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/40 transition flex items-center gap-1 font-mono-num" title="How to Play — Phone & Computer Instructions [H / ?]">
+                            <span class="font-extrabold">?</span>
+                            <span class="text-[10px] font-semibold">How to Play</span>
+                        </button>
                     </div>
                     <p class="text-[10px] text-slate-400 hidden xl:block font-mono-num">Infinite-Precision Reflex Search</p>
                 </div>
@@ -368,6 +372,172 @@
 
     </main>
 
+    <!-- INSTRUCTIONS POP-UP MODAL (Phone vs Computer Guide) -->
+    <div id="instructionsModal" class="hidden fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+        <div id="instructionsCard" class="max-w-3xl w-full bg-slate-900 border border-slate-700/90 rounded-2xl p-4 sm:p-6 shadow-2xl my-auto">
+            
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-mono-num text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                        <span>HOW TO PLAY // PI-SECT</span>
+                        <span id="detectedDeviceBadge" class="text-slate-300 font-normal"></span>
+                    </div>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-white">Infinite-Precision Binary &amp; Quadtree Search</h2>
+                </div>
+                <button id="closeHelpBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-mono-num text-sm font-bold transition shrink-0" title="Close [Esc]">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Core Rules Strip -->
+            <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-3 mb-4 text-xs text-slate-300 leading-relaxed">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div class="flex items-start gap-2">
+                        <span class="text-cyan-400 font-mono-num font-extrabold text-sm">01.</span>
+                        <div>
+                            <span class="font-bold text-white">Locate the Target Orb:</span> Check which side of the dashed <span class="text-amber-300 font-semibold">50% crosshair</span> the glowing dot is in.
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="text-amber-400 font-mono-num font-extrabold text-sm">02.</span>
+                        <div>
+                            <span class="font-bold text-white">Beat the Step Clock:</span> Slice into the target region before the collapsing ring shifts <span class="text-cyan-300">Cyan</span> → <span class="text-amber-300">Amber</span> → <span class="text-rose-400">Red</span>.
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="text-rose-400 font-mono-num font-extrabold text-sm">03.</span>
+                        <div>
+                            <span class="font-bold text-white">3 Lives (❤️) &amp; Zoom:</span> Every cut zooms in ($2\times$ in 1D, $4\times$ in 2D) to lock in digits of $\pi, \phi, \sqrt{2}$. Mistakes or timeouts cost 1 life.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile / Desktop View Switcher Tabs (Visible on small screens, optional filter on desktop) -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 w-full sm:w-auto">
+                    <button data-help-tab="all" class="help-tab-btn hidden sm:inline-block px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-slate-800 text-white">
+                        Both Devices
+                    </button>
+                    <button data-help-tab="phone" class="help-tab-btn flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white">
+                        📱 Phone / Touch
+                    </button>
+                    <button data-help-tab="computer" class="help-tab-btn flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white">
+                        💻 Computer / PC
+                    </button>
+                </div>
+                <span class="hidden md:inline text-[11px] font-mono-num text-slate-400">Timer pauses while this window is open</span>
+            </div>
+
+            <!-- Phone vs Computer Control Cards -->
+            <div id="helpCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                
+                <!-- PHONE / TABLET CARD -->
+                <div id="helpCardPhone" class="bg-slate-950/90 border border-cyan-500/40 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-sm">📱</span>
+                                <div>
+                                    <h3 class="text-sm font-extrabold text-white">On Phone &amp; Tablet</h3>
+                                    <p class="text-[10px] font-mono-num text-cyan-300">Direct Touch &amp; Thumb Deck</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 font-mono-num text-[10px] text-cyan-300">Touch</span>
+                        </div>
+
+                        <ul class="space-y-2 text-xs text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <span class="text-cyan-400 font-bold">▸</span>
+                                <div><strong class="text-white">Tap the Arena Directly (Fastest):</strong> Tap straight on the quadrant (<code class="text-cyan-300 font-mono-num">NW</code>, <code class="text-sky-300 font-mono-num">NE</code>, <code class="text-indigo-300 font-mono-num">SW</code>, <code class="text-amber-300 font-mono-num">SE</code>) or half (<code class="text-cyan-300 font-mono-num">Left</code> / <code class="text-amber-300 font-mono-num">Right</code>) where the glowing orb sits.</div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-cyan-400 font-bold">▸</span>
+                                <div><strong class="text-white">Two-Thumb Button Deck:</strong> Or tap the large tactile quadrant/bisect buttons below the canvas so your fingers never cover the arena.</div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-cyan-400 font-bold">▸</span>
+                                <div><strong class="text-white">Zero-Eye-Travel Timer:</strong> Keep your eyes on the orb—its outer ring shrinks as your step time runs down.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-800/90 flex items-center justify-between text-[11px] font-mono-num text-slate-400">
+                        <span>💡 <strong class="text-slate-200">Pro Tip:</strong> Tap <span class="text-cyan-300">Share → Add to Home Screen</span> for full-screen app mode.</span>
+                    </div>
+                </div>
+
+                <!-- COMPUTER / KEYBOARD & MOUSE CARD -->
+                <div id="helpCardComputer" class="bg-slate-950/90 border border-amber-500/40 rounded-xl p-3.5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-sm">💻</span>
+                                <div>
+                                    <h3 class="text-sm font-extrabold text-white">On Computer (PC / Mac)</h3>
+                                    <p class="text-[10px] font-mono-num text-amber-300">2×2 Key Matrix &amp; Mouse Click</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 font-mono-num text-[10px] text-amber-300">Keyboard / Mouse</span>
+                        </div>
+
+                        <div class="space-y-2 text-xs text-slate-300">
+                            <div>
+                                <div class="text-[11px] font-bold text-white mb-1">2D Quadtree Hotkeys (2×2 Left-Hand or Numpad):</div>
+                                <div class="grid grid-cols-2 gap-1.5 font-mono-num text-[11px]">
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-cyan-300">↖ NW (Top-L)</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">Q / 7</kbd>
+                                    </div>
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-sky-300">↗ NE (Top-R)</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">W / 9</kbd>
+                                    </div>
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-indigo-300">↙ SW (Bot-L)</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">A / 1</kbd>
+                                    </div>
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-amber-300">↘ SE (Bot-R)</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">S / 3</kbd>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-[11px] font-bold text-white">1D Line Hotkeys:</span>
+                                <div class="font-mono-num text-[11px] flex items-center gap-1.5">
+                                    <span class="text-cyan-300">Left:</span>
+                                    <kbd class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-white font-bold">← / A</kbd>
+                                    <span class="text-amber-300 ml-1">Right:</span>
+                                    <kbd class="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-white font-bold">→ / D</kbd>
+                                </div>
+                            </div>
+
+                            <div class="text-[11px] text-slate-400">
+                                <strong class="text-slate-200">Mouse:</strong> Click directly inside any quadrant/half on the canvas or use the deck buttons.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-2.5 border-t border-slate-800/90 flex items-center justify-between text-[11px] font-mono-num text-slate-400">
+                        <span>Restart: <kbd class="px-1 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-200">R</kbd></span>
+                        <span>Help: <kbd class="px-1 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-200">H</kbd> or <kbd class="px-1 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-200">?</kbd></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Action -->
+            <div class="flex items-center justify-end gap-3">
+                <button id="startPlayHelpBtn" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2">
+                    <span>Got It — Let's Play</span>
+                    <kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono-num bg-slate-950/25 rounded text-slate-950 font-extrabold">SPACE / ESC</kbd>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
          * ============================================================================
@@ -579,7 +749,11 @@
 
             // Mistake / Timeout flash overlay on canvas
             hurtFlashUntil: 0,
-            wrongZoneFlash: null
+            wrongZoneFlash: null,
+
+            // Pause state when Instructions Pop-up is open
+            isPaused: false,
+            pausedAt: 0
         };
 
         function computeStepTimeLimit(depth) {
@@ -752,7 +926,7 @@
 
         // Execute 1D Cut ('L' or 'R')
         function handleCut1D(sideKey) {
-            if (state.gameOver) return;
+            if (state.gameOver || state.isPaused) return;
             const now = performance.now();
 
             const midX = (state.lowX + state.highX) / 2n;
@@ -806,7 +980,7 @@
 
         // Execute 2D Quadrant Cut ('NW', 'NE', 'SW', 'SE')
         function handleCut2D(quadKey) {
-            if (state.gameOver) return;
+            if (state.gameOver || state.isPaused) return;
             const now = performance.now();
 
             const midX = (state.lowX + state.highX) / 2n;
@@ -1072,8 +1246,10 @@
         }
 
         function renderLoop(now) {
-            // 1. Update Step Countdown Clock
-            if (!state.gameOver && state.runStarted && state.paceMode !== 'zen') {
+            // 1. Update Step Countdown Clock (Paused while Instructions modal is open)
+            if (state.isPaused) {
+                // Freeze timerRatio while paused
+            } else if (!state.gameOver && state.runStarted && state.paceMode !== 'zen') {
                 const elapsed = now - state.stepStartTime;
                 const remaining = Math.max(0, state.stepTimeLimitMs - elapsed);
                 state.timerRatio = remaining / state.stepTimeLimitMs;
@@ -1451,9 +1627,110 @@
             });
         });
 
+        // Instructions Pop-up Modal (Phone vs Computer Guide)
+        const instructionsModal = document.getElementById('instructionsModal');
+        const helpCardPhone = document.getElementById('helpCardPhone');
+        const helpCardComputer = document.getElementById('helpCardComputer');
+        const helpCardsGrid = document.getElementById('helpCardsGrid');
+        const detectedDeviceBadge = document.getElementById('detectedDeviceBadge');
+
+        function isTouchMobileDevice() {
+            return window.matchMedia('(max-width: 639px)').matches || ('ontouchstart' in window && navigator.maxTouchPoints > 0 && window.innerWidth < 900);
+        }
+
+        function setHelpTab(tabName) {
+            document.querySelectorAll('.help-tab-btn').forEach((btn) => {
+                const active = btn.dataset.helpTab === tabName;
+                btn.className = active
+                    ? (btn.dataset.helpTab === 'all'
+                        ? 'help-tab-btn hidden sm:inline-block px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40'
+                        : 'help-tab-btn flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40')
+                    : (btn.dataset.helpTab === 'all'
+                        ? 'help-tab-btn hidden sm:inline-block px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white'
+                        : 'help-tab-btn flex-1 sm:flex-initial px-3 py-1.5 sm:py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white');
+            });
+
+            if (tabName === 'phone') {
+                helpCardPhone.classList.remove('hidden');
+                helpCardComputer.classList.add('hidden');
+                helpCardsGrid.className = 'grid grid-cols-1 gap-3 mb-4';
+            } else if (tabName === 'computer') {
+                helpCardComputer.classList.remove('hidden');
+                helpCardPhone.classList.add('hidden');
+                helpCardsGrid.className = 'grid grid-cols-1 gap-3 mb-4';
+            } else {
+                helpCardPhone.classList.remove('hidden');
+                helpCardComputer.classList.remove('hidden');
+                helpCardsGrid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4';
+            }
+        }
+
+        function openInstructions() {
+            if (!state.isPaused) {
+                state.isPaused = true;
+                state.pausedAt = performance.now();
+            }
+            const touchMobile = isTouchMobileDevice();
+            detectedDeviceBadge.textContent = touchMobile ? '• Phone / Touch Mode' : '• Desktop / Keyboard Mode';
+            if (window.innerWidth < 640) {
+                setHelpTab('phone');
+            } else {
+                setHelpTab('all');
+            }
+            instructionsModal.classList.remove('hidden');
+        }
+
+        function closeInstructions() {
+            if (state.isPaused) {
+                const pausedDuration = performance.now() - state.pausedAt;
+                if (state.runStarted && !state.gameOver) {
+                    state.stepStartTime += pausedDuration;
+                }
+                state.isPaused = false;
+            }
+            instructionsModal.classList.add('hidden');
+            try {
+                localStorage.setItem('pisect_seen_instructions_v1', '1');
+            } catch (e) {}
+        }
+
+        function toggleInstructions() {
+            if (instructionsModal.classList.contains('hidden')) {
+                openInstructions();
+            } else {
+                closeInstructions();
+            }
+        }
+
+        document.getElementById('helpToggleBtn').addEventListener('click', toggleInstructions);
+        document.getElementById('closeHelpBtn').addEventListener('click', closeInstructions);
+        document.getElementById('startPlayHelpBtn').addEventListener('click', closeInstructions);
+        instructionsModal.addEventListener('click', (e) => {
+            if (e.target === instructionsModal) {
+                closeInstructions();
+            }
+        });
+        document.querySelectorAll('.help-tab-btn').forEach((btn) => {
+            btn.addEventListener('click', () => setHelpTab(btn.dataset.helpTab));
+        });
+
         // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => {
             if (e.repeat) return;
+
+            if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+                e.preventDefault();
+                toggleInstructions();
+                return;
+            }
+
+            if (!instructionsModal.classList.contains('hidden')) {
+                if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    closeInstructions();
+                }
+                return;
+            }
 
             if (e.key === 'r' || e.key === 'R' || (e.key === ' ' && state.gameOver)) {
                 e.preventDefault();
@@ -1461,7 +1738,7 @@
                 return;
             }
 
-            if (state.gameOver) return;
+            if (state.gameOver || state.isPaused) return;
 
             if (state.dimensions === 1) {
                 if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
@@ -1549,6 +1826,11 @@
         window.onload = function () {
             resizeCanvas();
             initGame();
+            try {
+                if (!localStorage.getItem('pisect_seen_instructions_v1')) {
+                    openInstructions();
+                }
+            } catch (e) {}
             requestAnimationFrame(renderLoop);
         };
     </script>

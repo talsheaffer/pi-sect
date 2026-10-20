@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#050811">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PI-SECT">
+    <link rel="manifest" href="./manifest.json">
+    <title>PI-SECT // 1D & 2D Quadtree Time-Attack Arcade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body {
+            font-family: var(--font-sans);
+            background-color: #050811;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-mono-num {
+            font-family: var(--font-mono);
+            font-variant-numeric: tabular-nums;
+        }
+        .bg-instrument-grid {
+            background-image: 
+                linear-gradient(to right, rgba(30, 41, 59, 0.24) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(30, 41, 59, 0.24) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+        ::-webkit-scrollbar {
+            height: 4px;
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.35);
+            border-radius: 9999px;
+        }
+        .btn-slice {
+            transition: transform 0.05s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+        }
+        .btn-slice:active, .btn-slice.active-press {
+            transform: translateY(2px) scale(0.988);
+        }
+        @keyframes shake-hurt {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-7px) rotate(-0.4deg); }
+            40% { transform: translateX(6px) rotate(0.4deg); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(3px); }
+        }
+        .animate-hurt {
+            animation: shake-hurt 0.28s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-instrument-grid selection:bg-cyan-500/30 selection:text-cyan-200">
+
+    <!-- TOP BAR: Dimension Toggle (1D / 2D), Pace, Target, Midline & Zoom Controls -->
+    <header class="w-full border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-3 sm:px-5 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+            
+            <!-- Brand + 1D/2D Mode Switcher -->
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500/25 to-rose-500/20 border border-cyan-400/40 flex items-center justify-center shadow-inner shadow-cyan-500/20">
+                    <span id="brandSymbol" class="font-mono-num font-extrabold text-base text-cyan-300">2D</span>
+                </div>
+                <div class="mr-1">
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold tracking-tight text-sm sm:text-base text-white">PI-SECT</h1>
+                        <button id="soundToggleBtn" class="text-xs px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition flex items-center gap-1" title="Toggle Synth Audio">
+                            <span id="soundIcon">🔊</span>
+                            <span id="soundLabel" class="hidden sm:inline font-mono-num text-[10px]">SFX</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 hidden xl:block font-mono-num">Infinite-Precision Reflex Search</p>
+                </div>
+
+                <!-- 1D vs 2D Dimension Switcher -->
+                <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-700/80 shadow-inner">
+                    <button data-dim="1" class="dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white">
+                        1D Line
+                    </button>
+                    <button data-dim="2" class="dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40">
+                        2D Quadtree
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Lab & Arcade Controls -->
+            <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs">
+                
+                <!-- Timer Pace Mode -->
+                <div class="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800">
+                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 px-1.5 hidden md:inline">Timer</span>
+                    <button data-pace="adaptive" class="pace-btn px-2 py-1 rounded-md font-mono-num font-semibold transition bg-rose-500/20 text-rose-300 border border-rose-500/40" title="Starts at 1.8s and tightens down to 0.65s as depth increases">Adaptive</button>
+                    <button data-pace="blitz" class="pace-btn px-2 py-1 rounded-md font-mono-num font-semibold transition text-slate-400 hover:text-slate-200" title="Strict 1.05s per cut">Blitz 1.0s</button>
+                    <button data-pace="relaxed" class="pace-btn px-2 py-1 rounded-md font-mono-num font-semibold transition text-slate-400 hover:text-slate-200" title="Generous 2.0s per cut">2.0s</button>
+                    <button data-pace="zen" class="pace-btn px-2 py-1 rounded-md font-mono-num font-semibold transition text-slate-400 hover:text-slate-200" title="Untimed practice">Zen ∞</button>
+                </div>
+
+                <!-- Target Coordinate Generator -->
+                <div class="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800">
+                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 px-1.5 hidden lg:inline">Target</span>
+                    <button data-target="random" class="target-btn px-2 py-1 rounded-md font-mono-num font-semibold transition bg-cyan-500/20 text-cyan-300 border border-cyan-500/40" title="Fresh 320-digit irrational point every run">Random</button>
+                    <button data-target="pi" class="target-btn px-2 py-1 rounded-md font-mono-num font-semibold transition text-slate-400 hover:text-slate-200" title="π in 1D, (π, φ) in 2D">π / (π,φ)</button>
+                    <button data-target="phi" class="target-btn px-2 py-1 rounded-md font-mono-num font-semibold transition text-slate-400 hover:text-slate-200" title="φ in 1D, (√2, √3) in 2D">φ / (√2,√3)</button>
+                </div>
+
+                <!-- Midline Visibility Mode -->
+                <div class="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800">
+                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 px-1.5 hidden xl:inline">Grid</span>
+                    <button data-midline="demarcated" class="midline-btn px-2 py-1 rounded-md font-medium transition bg-amber-500/20 text-amber-300 border border-amber-500/40">Crosshair</button>
+                    <button data-midline="ghost" class="midline-btn px-2 py-1 rounded-md font-medium transition text-slate-400 hover:text-slate-200" title="Crosshairs fade out after depth 4">Ghost</button>
+                    <button data-midline="hidden" class="midline-btn px-2 py-1 rounded-md font-medium transition text-slate-400 hover:text-slate-200" title="Pure spatial eye estimation">Hidden</button>
+                </div>
+
+                <!-- Zoom Speed Mode -->
+                <div class="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800">
+                    <button data-zoom="75" class="zoom-btn px-2 py-1 rounded-md font-mono-num font-medium transition bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">75ms</button>
+                    <button data-zoom="150" class="zoom-btn px-2 py-1 rounded-md font-mono-num font-medium transition text-slate-400 hover:text-slate-200">150ms</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-5 py-3 flex flex-col justify-between gap-3">
+
+        <!-- SECTION 1: 3-LIVES SHIELD HUD, STEP COUNTDOWN & LOCKED DIGITS -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-2.5">
+            
+            <!-- Left 5 Cols: 3 Lives + Active Step Countdown Readout -->
+            <div class="lg:col-span-5 bg-slate-900/85 border border-slate-800/90 rounded-xl p-3 flex items-center justify-between gap-3">
+                
+                <!-- 3 Lives Display -->
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 mb-1">Lives Remaining</span>
+                    <div id="livesContainer" class="flex items-center gap-2">
+                        <!-- Populated by JS: 3 glowing hearts/shields -->
+                    </div>
+                </div>
+
+                <div class="h-8 w-px bg-slate-800"></div>
+
+                <!-- Live Step Timer & Visual Cue Legend -->
+                <div class="flex-1 flex flex-col items-end">
+                    <div class="flex items-center gap-1.5">
+                        <span id="timerStateDot" class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                        <span id="timerLabel" class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400">Step Clock</span>
+                    </div>
+                    <div class="flex items-baseline gap-1.5 mt-0.5">
+                        <span id="timerValueEl" class="font-mono-num text-2xl sm:text-3xl font-extrabold text-cyan-300">READY</span>
+                        <span id="timerMaxEl" class="font-mono-num text-xs text-slate-500">/ 1.80s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle 4 Cols: Coordinate Convergence Ribbon -->
+            <div class="lg:col-span-4 bg-slate-900/85 border border-slate-800/90 rounded-xl p-3 flex flex-col justify-between overflow-hidden">
+                <div class="flex items-center justify-between text-[10px] font-mono-num uppercase tracking-wider text-slate-400">
+                    <span id="coordHeaderLabel">Locked Coordinate Precision</span>
+                    <span class="text-cyan-300 font-bold"><span id="lockedCountEl">1</span> digits</span>
+                </div>
+                <div id="digitsRibbon" class="font-mono-num text-xs sm:text-sm tracking-wider whitespace-nowrap overflow-x-auto py-1">
+                    <!-- Populated dynamically with X (and Y in 2D) locked digits -->
+                </div>
+            </div>
+
+            <!-- Right 3 Cols: Score/Depth & Speed Telemetry -->
+            <div class="lg:col-span-3 grid grid-cols-2 gap-2">
+                <div class="bg-slate-900/85 border border-slate-800/90 rounded-xl p-2.5 flex flex-col justify-between">
+                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400">Depth</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="depthEl" class="font-mono-num text-2xl font-extrabold text-white">0</span>
+                        <span id="zoomScaleEl" class="text-[10px] font-mono-num text-cyan-400">1x</span>
+                    </div>
+                    <span id="bestDepthEl" class="text-[10px] font-mono-num text-slate-400">Best: 0</span>
+                </div>
+
+                <div class="bg-slate-900/85 border border-slate-800/90 rounded-xl p-2.5 flex flex-col justify-between">
+                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400">Pace</span>
+                    <div class="flex items-baseline gap-1">
+                        <span id="cpsEl" class="font-mono-num text-2xl font-extrabold text-emerald-400">0.0</span>
+                        <span class="text-[10px] font-mono-num text-slate-500">/s</span>
+                    </div>
+                    <span id="msPerTapEl" class="text-[10px] font-mono-num text-slate-400">-- ms/cut</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: THE BISECTION ARENA (1D & 2D QUADTREE CANVAS) -->
+        <section id="arenaSection" class="relative bg-slate-950 border-2 border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-colors duration-100">
+            
+            <!-- Top-Edge Dual-Symmetric Laser Fuse Bar (Burns inward & shifts Cyan -> Amber -> Red) -->
+            <div class="w-full h-1.5 bg-slate-900/90 relative overflow-hidden">
+                <div id="topFuseBar" class="h-full w-full mx-auto transition-none" style="background: linear-gradient(90deg, transparent 0%, #22d3ee 15%, #22d3ee 85%, transparent 100%);"></div>
+            </div>
+
+            <!-- Arena Header Bar: Live Interval Bounds -->
+            <div class="px-3 sm:px-5 py-1.5 bg-slate-900/90 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono-num">
+                <div class="flex items-center gap-2">
+                    <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-bold" id="arenaModeTag">2D QUADTREE</span>
+                    <span id="boundsReadoutX" class="text-cyan-300/90 truncate">X ∈ [3.000000, 4.000000]</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="boundsReadoutY" class="text-amber-300/90 truncate">Y ∈ [1.000000, 2.000000]</span>
+                    <button id="quickResetBtn" class="text-[11px] font-mono-num text-slate-300 hover:text-white px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 transition">
+                        Restart [R]
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interactive Canvas Container -->
+            <div id="canvasContainer" class="relative w-full h-72 sm:h-80 md:h-96 cursor-crosshair touch-manipulation select-none">
+                <canvas id="bisectCanvas" class="block w-full h-full"></canvas>
+
+                <!-- Floating Life Lost / Status Callout Banner (Non-blocking) -->
+                <div id="statusToast" class="pointer-events-none opacity-0 transition-opacity duration-150 absolute top-4 left-1/2 -translate-x-1/2 z-20">
+                    <div id="statusToastInner" class="px-4 py-1.5 rounded-full bg-rose-950/90 border border-rose-500/80 shadow-lg shadow-rose-500/20 font-mono-num text-xs font-extrabold tracking-wider text-rose-200 flex items-center gap-2">
+                        <span>💔</span>
+                        <span id="statusToastText">TOO SLOW! -1 LIFE</span>
+                    </div>
+                </div>
+
+                <!-- GAME OVER MODAL (Appears when all 3 lives are depleted) -->
+                <div id="gameOverModal" class="hidden absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 text-center">
+                    <div class="max-w-md w-full bg-slate-900 border border-slate-700/90 rounded-2xl p-5 sm:p-6 shadow-2xl">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-2 bg-rose-500/20 border border-rose-400/50 text-rose-300">
+                            <span id="modalStatusTitle" class="font-mono-num text-xs font-extrabold uppercase tracking-wider">ALL 3 LIVES DEPLETED</span>
+                        </div>
+                        <h2 id="modalHeadline" class="text-xl font-extrabold text-white mb-1">Reached Depth 18</h2>
+                        <p id="modalSubtext" class="text-xs font-mono-num text-slate-400 mb-4">
+                            Final Error: Timed out on Step 19
+                        </p>
+
+                        <!-- Post-Mortem Telemetry Grid -->
+                        <div class="grid grid-cols-3 gap-2 bg-slate-950/90 p-3 rounded-xl border border-slate-800 mb-5 font-mono-num">
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase">Depth</div>
+                                <div id="modalDepth" class="text-base sm:text-lg font-bold text-white">18 cuts</div>
+                                <div id="modalScale" class="text-[10px] text-cyan-400">Zoom: 2^18x</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase">Avg Speed</div>
+                                <div id="modalSpeed" class="text-base sm:text-lg font-bold text-emerald-400">3.4 /s</div>
+                                <div id="modalMs" class="text-[10px] text-slate-400">294 ms/cut</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase">Precision</div>
+                                <div id="modalDigits" class="text-base sm:text-lg font-bold text-amber-300">6 digits</div>
+                                <div id="modalMode" class="text-[10px] text-slate-400">2D Quadtree</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-center gap-3">
+                            <button id="restartBtn" class="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-400 hover:to-sky-400 text-slate-950 shadow-lg shadow-cyan-500/25 transition flex items-center justify-center gap-2">
+                                <span>Play Again (3 Lives)</span>
+                                <kbd class="px-1.5 py-0.5 text-[10px] font-mono-num bg-slate-950/25 rounded text-slate-950 font-extrabold">SPACE / R</kbd>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Arena Bar: History Tape & Visual Urgency Cue Hint -->
+            <div class="px-3 sm:px-5 py-1.5 bg-slate-900/95 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 flex-1 overflow-hidden">
+                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 shrink-0">Cut Path:</span>
+                    <div id="bitTapeContainer" class="flex-1 overflow-x-auto whitespace-nowrap font-mono-num text-xs flex items-center gap-1 py-0.5">
+                        <!-- Populated with L/R or NW/NE/SW/SE pills -->
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-2 text-[10px] font-mono-num text-slate-400 shrink-0">
+                    <span>Urgency Ring:</span>
+                    <span class="inline-block w-2 h-2 rounded-full bg-cyan-400"></span><span>Safe</span>
+                    <span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span><span>Warn</span>
+                    <span class="inline-block w-2 h-2 rounded-full bg-rose-500"></span><span>Critical</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: ADAPTIVE TACTILE BUTTON DECK (1D LEFT/RIGHT OR 2D 4-QUADRANT DECK) -->
+        <section>
+            <!-- 1D CONTROLS (Shown in 1D Mode) -->
+            <div id="controls1D" class="hidden grid-cols-2 gap-3 sm:gap-4">
+                <button id="btnLeft1D" class="btn-slice group rounded-2xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-cyan-500/40 hover:border-cyan-400 p-3.5 sm:p-4 flex items-center justify-between shadow-lg">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-300 font-mono-num text-xl font-bold">←</div>
+                        <div class="text-left">
+                            <div class="text-sm sm:text-base font-extrabold text-white">BISECT LEFT</div>
+                            <div class="text-[11px] font-mono-num text-cyan-300/80">Lower Half [0, 0.5)</div>
+                        </div>
+                    </div>
+                    <kbd class="hidden sm:inline-block px-2 py-1 rounded bg-slate-950 border border-slate-700 font-mono-num text-xs text-slate-300">← / A</kbd>
+                </button>
+
+                <button id="btnRight1D" class="btn-slice group rounded-2xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-amber-500/40 hover:border-amber-400 p-3.5 sm:p-4 flex items-center justify-between shadow-lg">
+                    <kbd class="hidden sm:inline-block px-2 py-1 rounded bg-slate-950 border border-slate-700 font-mono-num text-xs text-slate-300">→ / D</kbd>
+                    <div class="flex items-center gap-3 ml-auto">
+                        <div class="text-right">
+                            <div class="text-sm sm:text-base font-extrabold text-white">BISECT RIGHT</div>
+                            <div class="text-[11px] font-mono-num text-amber-300/80">Upper Half (0.5, 1]</div>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-amber-300 font-mono-num text-xl font-bold">→</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- 2D QUADRANT CONTROLS (Shown in 2D Mode — Plus Direct Canvas Quadrant Click!) -->
+            <div id="controls2D" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+                <button data-quad="NW" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-cyan-500/40 hover:border-cyan-400 p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-300 font-mono-num font-bold text-sm">↖</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">NW Quad</div>
+                            <div class="text-[10px] font-mono-num text-slate-400">Top-Left</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-cyan-300">Q / 7</kbd>
+                </button>
+
+                <button data-quad="NE" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-sky-500/40 hover:border-sky-400 p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-sky-500/15 border border-sky-400/40 flex items-center justify-center text-sky-300 font-mono-num font-bold text-sm">↗</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">NE Quad</div>
+                            <div class="text-[10px] font-mono-num text-slate-400">Top-Right</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-sky-300">W / 9</kbd>
+                </button>
+
+                <button data-quad="SW" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-indigo-500/40 hover:border-indigo-400 p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-400/40 flex items-center justify-center text-indigo-300 font-mono-num font-bold text-sm">↙</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">SW Quad</div>
+                            <div class="text-[10px] font-mono-num text-slate-400">Bottom-Left</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-indigo-300">A / 1</kbd>
+                </button>
+
+                <button data-quad="SE" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-amber-500/40 hover:border-amber-400 p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-amber-300 font-mono-num font-bold text-sm">↘</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">SE Quad</div>
+                            <div class="text-[10px] font-mono-num text-slate-400">Bottom-Right</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-amber-300">S / 3</kbd>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        /**
+         * ============================================================================
+         * 1. ARBITRARY-PRECISION BIGINT COORDINATE ENGINE (320 DECIMAL DIGITS)
+         * ============================================================================
+         * Supports both 1D (X) and 2D (X, Y) coordinates with 320 decimal digits of
+         * exact integer precision so players never hit 64-bit float underflow.
+         */
+        const DEC_DIGITS = 320;
+        const SCALE = 10n ** BigInt(DEC_DIGITS);
+        const REL_PRECISION = 1000000000n;
+
+        function bigArctanInv(xBig, extraGuard) {
+            const guardScale = SCALE * extraGuard;
+            const xSq = xBig * xBig;
+            let term = guardScale / xBig;
+            let sum = term;
+            let n = 1n;
+            while (term > 0n) {
+                term = term / xSq;
+                const denom = 2n * n + 1n;
+                const step = term / denom;
+                if (step === 0n) break;
+                if (n % 2n === 1n) sum -= step;
+                else sum += step;
+                n += 1n;
+            }
+            return sum;
+        }
+
+        function computeExactPi() {
+            const guard = 10n ** 12n;
+            const a = bigArctanInv(5n, guard);
+            const b = bigArctanInv(239n, guard);
+            return (4n * (4n * a - b)) / guard;
+        }
+
+        function computeExactSqrt(nBig) {
+            const guard = 10n ** 12n;
+            const target = nBig * SCALE * SCALE * guard * guard;
+            let x = SCALE * guard;
+            for (let i = 0; i < 65; i++) {
+                x = (x + target / x) / 2n;
+            }
+            return x / guard;
+        }
+
+        const EXACT_PI = computeExactPi();
+        const EXACT_SQRT5 = computeExactSqrt(5n);
+        const EXACT_PHI = (SCALE + EXACT_SQRT5) / 2n;
+        const EXACT_SQRT2 = computeExactSqrt(2n);
+        const EXACT_SQRT3 = computeExactSqrt(3n);
+
+        // Generate a fresh 320-digit non-repeating irrational-like coordinate in (intBase, intBase + 1)
+        function generateRandomBigCoord(intBaseBig) {
+            let digits = '';
+            const buf = new Uint32Array(40);
+            if (window.crypto && window.crypto.getRandomValues) {
+                window.crypto.getRandomValues(buf);
+                for (let i = 0; i < buf.length; i++) {
+                    digits += (buf[i] % 100000000).toString().padStart(8, '0');
+                }
+            } else {
+                for (let i = 0; i < DEC_DIGITS; i++) {
+                    digits += Math.floor(Math.random() * 10).toString();
+                }
+            }
+            // Ensure the final digits are non-zero so it cannot terminate on a dyadic boundary
+            digits = digits.slice(0, DEC_DIGITS - 3) + '739';
+            return intBaseBig * SCALE + BigInt(digits);
+        }
+
+        /**
+         * ============================================================================
+         * 2. SYNTHESIZER AUDIO ENGINE (WEB AUDIO API)
+         * ============================================================================
+         */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playSlice(quadIndex, depth) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                const baseFreqs = [280, 330, 370, 420];
+                const baseFreq = baseFreqs[quadIndex % 4];
+                const pitchBoost = Math.min(depth * 8, 400);
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(baseFreq + pitchBoost, now);
+                osc.frequency.exponentialRampToValueAtTime((baseFreq + pitchBoost) * 1.4, now + 0.06);
+
+                gain.gain.setValueAtTime(0.13, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.075);
+            }
+
+            playLifeLost(isGameOver) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(isGameOver ? 140 : 190, now);
+                osc.frequency.linearRampToValueAtTime(isGameOver ? 55 : 85, now + (isGameOver ? 0.38 : 0.22));
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + (isGameOver ? 0.4 : 0.24));
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + (isGameOver ? 0.42 : 0.25));
+            }
+        }
+
+        const sfx = new SoundEngine();
+
+        /**
+         * ============================================================================
+         * 3. GAME STATE, 3-LIFE SYSTEM & STEP COUNTDOWN CONTROLLER
+         * ============================================================================
+         */
+        const MAX_LIVES = 3;
+
+        const state = {
+            dimensions: 2,             // 1 (1D Line) | 2 (2D Quadtree)
+            paceMode: 'adaptive',      // 'adaptive' | 'blitz' | 'relaxed' | 'zen'
+            targetMode: 'random',      // 'random' | 'pi' | 'phi'
+            midlineMode: 'demarcated', // 'demarcated' | 'ghost' | 'hidden'
+            zoomDurationMs: 75,        // 75 | 150
+
+            // Exact BigInt bounds for X and Y
+            lowX: 3n * SCALE,
+            highX: 4n * SCALE,
+            targetX: EXACT_PI,
+
+            lowY: 1n * SCALE,
+            highY: 2n * SCALE,
+            targetY: EXACT_PHI,
+
+            // Normalized position in [0, 1] within current interval
+            // Note: relY = 0 is TOP of canvas (NW/NE), relY = 1 is BOTTOM of canvas (SW/SE)
+            relX: 0.5,
+            relY: 0.5,
+
+            depth: 0,
+            bestDepth: { '1': 0, '2': 0 },
+            history: [],
+
+            // 3-Life System
+            lives: MAX_LIVES,
+            runStarted: false,         // Timer starts after the player makes their 1st cut
+            gameOver: false,
+            lastFailureReason: '',
+
+            // Per-step countdown timer (in ms)
+            stepTimeLimitMs: 1800,
+            stepStartTime: 0,
+            timerRatio: 1.0,           // 1.0 (full time left) -> 0.0 (expired)
+
+            // Speed telemetry
+            firstCutTime: null,
+            lastCutTime: null,
+
+            // Hover quadrant in 2D or half in 1D for subtle visual feedback
+            hoverZone: null,           // 'L'|'R' or 'NW'|'NE'|'SW'|'SE'
+
+            // Smooth camera zoom interpolation
+            anim: {
+                active: false,
+                startTime: 0,
+                duration: 75,
+                fromX: 0.5,
+                fromY: 0.5,
+                toX: 0.5,
+                toY: 0.5,
+                currX: 0.5,
+                currY: 0.5,
+                progress: 1,
+                lastChosenZone: null
+            },
+
+            // Mistake / Timeout flash overlay on canvas
+            hurtFlashUntil: 0,
+            wrongZoneFlash: null
+        };
+
+        function computeStepTimeLimit(depth) {
+            if (state.paceMode === 'zen') return Infinity;
+            if (state.paceMode === 'blitz') return 1050;
+            if (state.paceMode === 'relaxed') return 2000;
+            // Adaptive: starts at 1850ms on depth 1 and tightens smoothly down to 680ms
+            return Math.max(680, Math.round(1850 - depth * 42));
+        }
+
+        function computeRelPos(target, low, high) {
+            const width = high - low;
+            if (width <= 0n) return 0.5;
+            const scaled = ((target - low) * REL_PRECISION) / width;
+            return Number(scaled) / Number(REL_PRECISION);
+        }
+
+        function formatBigDecimal(val, maxFracChars = 24) {
+            const intPart = val / SCALE;
+            const fracPart = val % SCALE;
+            const fracStr = fracPart.toString().padStart(DEC_DIGITS, '0').slice(0, maxFracChars);
+            return `${intPart.toString()}.${fracStr}`;
+        }
+
+        function computeLockedPrefix(low, high, target) {
+            const lowStr = formatBigDecimal(low, 60);
+            const highStr = formatBigDecimal(high, 60);
+            const targStr = formatBigDecimal(target, 60);
+            let lockedChars = 0;
+            for (let i = 0; i < targStr.length; i++) {
+                if (lowStr[i] === highStr[i] && lowStr[i] === targStr[i]) {
+                    lockedChars++;
+                } else {
+                    break;
+                }
+            }
+            return { lockedChars, targStr, lowStr, highStr };
+        }
+
+        /**
+         * ============================================================================
+         * 4. INITIALIZATION, BISECTION & LIFE LOSS LOGIC
+         * ============================================================================
+         */
+        function initGame() {
+            // Configure exact BigInt coordinates based on selected target preset
+            if (state.targetMode === 'pi') {
+                state.lowX = 3n * SCALE;
+                state.highX = 4n * SCALE;
+                state.targetX = EXACT_PI;
+
+                state.lowY = 1n * SCALE;
+                state.highY = 2n * SCALE;
+                state.targetY = EXACT_PHI;
+            } else if (state.targetMode === 'phi') {
+                state.lowX = 1n * SCALE;
+                state.highX = 2n * SCALE;
+                state.targetX = state.dimensions === 1 ? EXACT_PHI : EXACT_SQRT2;
+
+                state.lowY = 1n * SCALE;
+                state.highY = 2n * SCALE;
+                state.targetY = EXACT_SQRT3;
+            } else {
+                // Fresh random 320-digit irrational coordinates
+                state.lowX = 0n;
+                state.highX = 1n * SCALE;
+                state.targetX = generateRandomBigCoord(0n);
+
+                state.lowY = 0n;
+                state.highY = 1n * SCALE;
+                state.targetY = generateRandomBigCoord(0n);
+            }
+
+            state.depth = 0;
+            state.history = [];
+            state.lives = MAX_LIVES;
+            state.runStarted = false;
+            state.gameOver = false;
+            state.lastFailureReason = '';
+            state.firstCutTime = null;
+            state.lastCutTime = null;
+
+            state.relX = computeRelPos(state.targetX, state.lowX, state.highX);
+            state.relY = computeRelPos(state.targetY, state.lowY, state.highY);
+
+            state.stepTimeLimitMs = computeStepTimeLimit(0);
+            state.stepStartTime = performance.now();
+            state.timerRatio = 1.0;
+
+            state.anim.active = false;
+            state.anim.fromX = state.relX;
+            state.anim.fromY = state.relY;
+            state.anim.toX = state.relX;
+            state.anim.toY = state.relY;
+            state.anim.currX = state.relX;
+            state.anim.currY = state.relY;
+            state.anim.progress = 1;
+            state.anim.lastChosenZone = null;
+
+            document.getElementById('gameOverModal').classList.add('hidden');
+            syncDimensionUI();
+            renderLivesHUD();
+            updateHUD();
+        }
+
+        function syncDimensionUI() {
+            const is2D = state.dimensions === 2;
+            document.getElementById('brandSymbol').textContent = is2D ? '2D' : '1D';
+            document.getElementById('arenaModeTag').textContent = is2D ? '2D QUADTREE' : '1D LINE';
+            document.getElementById('boundsReadoutY').style.display = is2D ? 'inline' : 'none';
+
+            const c1d = document.getElementById('controls1D');
+            const c2d = document.getElementById('controls2D');
+            if (is2D) {
+                c1d.classList.add('hidden');
+                c1d.classList.remove('grid');
+                c2d.classList.remove('hidden');
+                c2d.classList.add('grid');
+            } else {
+                c2d.classList.add('hidden');
+                c2d.classList.remove('grid');
+                c1d.classList.remove('hidden');
+                c1d.classList.add('grid');
+            }
+        }
+
+        function showStatusToast(message) {
+            const toast = document.getElementById('statusToast');
+            const textEl = document.getElementById('statusToastText');
+            textEl.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 950);
+        }
+
+        // Deduct 1 life on either Timeout or Wrong Bisection
+        function loseLife(reasonText, wrongZoneKey = null) {
+            if (state.gameOver) return;
+
+            state.lives = Math.max(0, state.lives - 1);
+            state.lastFailureReason = reasonText;
+            const now = performance.now();
+            state.hurtFlashUntil = now + 280;
+            state.wrongZoneFlash = wrongZoneKey;
+
+            // Shake the arena
+            const arena = document.getElementById('arenaSection');
+            arena.classList.remove('animate-hurt');
+            void arena.offsetWidth;
+            arena.classList.add('animate-hurt');
+
+            renderLivesHUD();
+            showStatusToast(`${reasonText} (${state.lives} ${state.lives === 1 ? 'LIFE' : 'LIVES'} LEFT)`);
+
+            if (state.lives <= 0) {
+                sfx.playLifeLost(true);
+                triggerGameOver();
+            } else {
+                sfx.playLifeLost(false);
+                // Reset the step clock so the player has a fresh window to make the cut
+                state.stepTimeLimitMs = computeStepTimeLimit(state.depth);
+                state.stepStartTime = now;
+                state.timerRatio = 1.0;
+            }
+        }
+
+        // Execute 1D Cut ('L' or 'R')
+        function handleCut1D(sideKey) {
+            if (state.gameOver) return;
+            const now = performance.now();
+
+            const midX = (state.lowX + state.highX) / 2n;
+            const correctKey = state.targetX < midX ? 'L' : 'R';
+
+            if (sideKey !== correctKey) {
+                loseLife(`WRONG HALF (${sideKey})! -1 LIFE`, sideKey);
+                return;
+            }
+
+            // Valid cut!
+            if (!state.runStarted) {
+                state.runStarted = true;
+                state.firstCutTime = now;
+            }
+            state.lastCutTime = now;
+
+            const prevVisualX = state.anim.active ? state.anim.currX : state.relX;
+
+            if (sideKey === 'L') {
+                state.highX = midX;
+            } else {
+                state.lowX = midX;
+            }
+
+            state.depth++;
+            state.history.push(sideKey);
+            if (state.depth > state.bestDepth['1']) {
+                state.bestDepth['1'] = state.depth;
+            }
+
+            state.relX = computeRelPos(state.targetX, state.lowX, state.highX);
+            sfx.playSlice(sideKey === 'L' ? 0 : 1, state.depth);
+
+            // Reset step timer for the new depth
+            state.stepTimeLimitMs = computeStepTimeLimit(state.depth);
+            state.stepStartTime = now;
+            state.timerRatio = 1.0;
+
+            // Trigger smooth camera zoom interpolation
+            state.anim.active = true;
+            state.anim.startTime = now;
+            state.anim.duration = state.zoomDurationMs;
+            state.anim.fromX = prevVisualX;
+            state.anim.toX = state.relX;
+            state.anim.progress = 0;
+            state.anim.lastChosenZone = sideKey;
+
+            updateHUD();
+        }
+
+        // Execute 2D Quadrant Cut ('NW', 'NE', 'SW', 'SE')
+        function handleCut2D(quadKey) {
+            if (state.gameOver) return;
+            const now = performance.now();
+
+            const midX = (state.lowX + state.highX) / 2n;
+            const midY = (state.lowY + state.highY) / 2n;
+
+            const isWest = state.targetX < midX;
+            const isNorth = state.targetY < midY;
+            const correctQuad = (isNorth ? 'N' : 'S') + (isWest ? 'W' : 'E');
+
+            if (quadKey !== correctQuad) {
+                loseLife(`WRONG QUADRANT (${quadKey})! -1 LIFE`, quadKey);
+                return;
+            }
+
+            // Valid 2D Quadtree cut!
+            if (!state.runStarted) {
+                state.runStarted = true;
+                state.firstCutTime = now;
+            }
+            state.lastCutTime = now;
+
+            const prevVisualX = state.anim.active ? state.anim.currX : state.relX;
+            const prevVisualY = state.anim.active ? state.anim.currY : state.relY;
+
+            if (isWest) state.highX = midX;
+            else state.lowX = midX;
+
+            if (isNorth) state.highY = midY;
+            else state.lowY = midY;
+
+            state.depth++;
+            state.history.push(quadKey);
+            if (state.depth > state.bestDepth['2']) {
+                state.bestDepth['2'] = state.depth;
+            }
+
+            state.relX = computeRelPos(state.targetX, state.lowX, state.highX);
+            state.relY = computeRelPos(state.targetY, state.lowY, state.highY);
+
+            const quadIdx = { NW: 0, NE: 1, SW: 2, SE: 3 }[quadKey];
+            sfx.playSlice(quadIdx, state.depth);
+
+            // Reset step timer for the new depth
+            state.stepTimeLimitMs = computeStepTimeLimit(state.depth);
+            state.stepStartTime = now;
+            state.timerRatio = 1.0;
+
+            // Trigger smooth 2D camera zoom interpolation
+            state.anim.active = true;
+            state.anim.startTime = now;
+            state.anim.duration = state.zoomDurationMs;
+            state.anim.fromX = prevVisualX;
+            state.anim.fromY = prevVisualY;
+            state.anim.toX = state.relX;
+            state.anim.toY = state.relY;
+            state.anim.progress = 0;
+            state.anim.lastChosenZone = quadKey;
+
+            updateHUD();
+        }
+
+        function triggerGameOver() {
+            state.gameOver = true;
+            const modal = document.getElementById('gameOverModal');
+
+            document.getElementById('modalHeadline').textContent = `Reached Depth ${state.depth}`;
+            document.getElementById('modalSubtext').textContent = `Final Life Lost: ${state.lastFailureReason}`;
+            document.getElementById('modalDepth').textContent = `${state.depth} cuts`;
+
+            const base = state.dimensions === 2 ? 4 : 2;
+            const scaleText = state.depth <= 12
+                ? `${(base ** state.depth).toLocaleString()}x area`
+                : `${base}^${state.depth}x`;
+            document.getElementById('modalScale').textContent = `Zoom: ${scaleText}`;
+
+            let speedText = '0.0 /s';
+            let msText = '-- ms/cut';
+            if (state.depth > 0 && state.firstCutTime && state.lastCutTime > state.firstCutTime) {
+                const elapsedSec = (state.lastCutTime - state.firstCutTime) / 1000;
+                speedText = `${(state.depth / elapsedSec).toFixed(1)} /s`;
+                msText = `${Math.round((elapsedSec * 1000) / state.depth)} ms/cut`;
+            }
+            document.getElementById('modalSpeed').textContent = speedText;
+            document.getElementById('modalMs').textContent = msText;
+
+            const lockX = computeLockedPrefix(state.lowX, state.highX, state.targetX);
+            const digitsX = Math.max(1, lockX.lockedChars - 1);
+            document.getElementById('modalDigits').textContent = `${digitsX} digits`;
+            document.getElementById('modalMode').textContent = state.dimensions === 2 ? '2D Quadtree' : '1D Line';
+
+            modal.classList.remove('hidden');
+        }
+
+        /**
+         * ============================================================================
+         * 5. HUD & PRECISION RIBBON RENDERERS
+         * ============================================================================
+         */
+        function renderLivesHUD() {
+            const container = document.getElementById('livesContainer');
+            let html = '';
+            for (let i = 0; i < MAX_LIVES; i++) {
+                const alive = i < state.lives;
+                if (alive) {
+                    html += `
+                        <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/60 flex items-center justify-center shadow-sm shadow-rose-500/30 transition-all duration-200">
+                            <svg class="w-4 h-4 text-rose-400 fill-current" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </div>`;
+                } else {
+                    html += `
+                        <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center opacity-35 transition-all duration-200">
+                            <svg class="w-4 h-4 text-slate-600 fill-current" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </div>`;
+                }
+            }
+            container.innerHTML = html;
+        }
+
+        function formatLockedStringHTML(label, lockObj) {
+            const { lockedChars, targStr } = lockObj;
+            const showLen = 20;
+            let out = `<span class="text-slate-500 font-bold mr-1">${label}:</span>`;
+            for (let i = 0; i < showLen; i++) {
+                const ch = targStr[i];
+                if (i < lockedChars) {
+                    out += `<span class="text-cyan-300 font-extrabold">${ch}</span>`;
+                } else if (i === lockedChars) {
+                    out += `<span class="text-amber-300 font-bold underline decoration-amber-400/80">${ch}</span>`;
+                } else {
+                    out += `<span class="text-slate-600">${ch}</span>`;
+                }
+            }
+            return out;
+        }
+
+        function updateHUD() {
+            const lockX = computeLockedPrefix(state.lowX, state.highX, state.targetX);
+            const digitsX = Math.max(1, lockX.lockedChars - 1);
+            document.getElementById('lockedCountEl').textContent = digitsX;
+
+            const ribbon = document.getElementById('digitsRibbon');
+            if (state.dimensions === 1) {
+                ribbon.innerHTML = formatLockedStringHTML('X', lockX);
+            } else {
+                const lockY = computeLockedPrefix(state.lowY, state.highY, state.targetY);
+                ribbon.innerHTML = `<div class="flex flex-col gap-0.5">
+                    <div>${formatLockedStringHTML('X', lockX)}</div>
+                    <div>${formatLockedStringHTML('Y', lockY)}</div>
+                </div>`;
+            }
+
+            // Depth & Zoom Scale
+            document.getElementById('depthEl').textContent = state.depth;
+            const dimKey = String(state.dimensions);
+            document.getElementById('bestDepthEl').textContent = `Best: ${state.bestDepth[dimKey]}`;
+            document.getElementById('zoomScaleEl').textContent = state.depth === 0
+                ? '1x'
+                : (state.depth <= 14 ? `${(2 ** state.depth).toLocaleString()}x` : `2^${state.depth}x`);
+
+            // Speed telemetry
+            if (state.depth > 0 && state.firstCutTime && state.lastCutTime > state.firstCutTime) {
+                const elapsedSec = (state.lastCutTime - state.firstCutTime) / 1000;
+                document.getElementById('cpsEl').textContent = (state.depth / elapsedSec).toFixed(1);
+                document.getElementById('msPerTapEl').textContent = `${Math.round((elapsedSec * 1000) / state.depth)} ms/cut`;
+            } else {
+                document.getElementById('cpsEl').textContent = '0.0';
+                document.getElementById('msPerTapEl').textContent = '-- ms/cut';
+            }
+
+            // Bounds Readout
+            document.getElementById('boundsReadoutX').textContent = `X ∈ [${lockX.lowStr.slice(0, 10)}, ${lockX.highStr.slice(0, 10)}]`;
+            if (state.dimensions === 2) {
+                const lockY = computeLockedPrefix(state.lowY, state.highY, state.targetY);
+                document.getElementById('boundsReadoutY').textContent = `Y ∈ [${lockY.lowStr.slice(0, 10)}, ${lockY.highStr.slice(0, 10)}]`;
+            }
+
+            // History Tape
+            const tape = document.getElementById('bitTapeContainer');
+            if (state.history.length === 0) {
+                tape.innerHTML = `<span class="text-slate-600 italic">Make your first cut to start the countdown clock...</span>`;
+            } else {
+                tape.innerHTML = state.history.slice(-28).map((step, idx) => {
+                    const isLast = idx === state.history.slice(-28).length - 1;
+                    const cls = isLast
+                        ? 'bg-cyan-500/30 text-cyan-200 border-cyan-400 font-bold'
+                        : 'bg-slate-900 text-slate-400 border-slate-800';
+                    return `<span class="px-1.5 py-0.2 rounded border text-[11px] ${cls}">${step}</span>`;
+                }).join('');
+                tape.scrollLeft = tape.scrollWidth;
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 6. VISUAL URGENCY CUE COLOR INTERPOLATOR (CYAN -> AMBER -> CRIMSON)
+         * ============================================================================
+         * Returns synchronized RGB colors for the Target Halo, Contracting Timer Ring,
+         * Crosshair Glow, and Top Laser Fuse Bar based on remaining time ratio [1.0 -> 0.0].
+         */
+        function getUrgencyPalette(ratio) {
+            // ratio = 1.0 (full time remaining) -> 0.0 (time up)
+            if (ratio > 0.55) {
+                // Safe Zone: Electric Cyan (#22d3ee -> rgb(34, 211, 238))
+                return {
+                    r: 34, g: 211, b: 238,
+                    hex: '#22d3ee',
+                    textClass: 'text-cyan-300',
+                    dotClass: 'bg-cyan-400',
+                    urgencyLevel: 0
+                };
+            } else if (ratio > 0.25) {
+                // Warning Zone: Smoothly blend Cyan -> Warm Amber (#f59e0b -> rgb(245, 158, 11))
+                const t = (0.55 - ratio) / 0.30;
+                const r = Math.round(34 + (245 - 34) * t);
+                const g = Math.round(211 + (158 - 211) * t);
+                const b = Math.round(238 + (11 - 238) * t);
+                return {
+                    r, g, b,
+                    hex: `rgb(${r}, ${g}, ${b})`,
+                    textClass: 'text-amber-300',
+                    dotClass: 'bg-amber-400',
+                    urgencyLevel: 1
+                };
+            } else {
+                // Critical Zone: Blend Amber -> Urgent Crimson (#ff2a5f -> rgb(255, 42, 95))
+                const t = Math.min(1, (0.25 - ratio) / 0.25);
+                const r = Math.round(245 + (255 - 245) * t);
+                const g = Math.round(158 + (42 - 158) * t);
+                const b = Math.round(11 + (95 - 11) * t);
+                return {
+                    r, g, b,
+                    hex: `rgb(${r}, ${g}, ${b})`,
+                    textClass: 'text-rose-400',
+                    dotClass: 'bg-rose-500 animate-ping',
+                    urgencyLevel: 2
+                };
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 7. HIGH-DPI CANVAS ARENA RENDERER (1D & 2D QUADTREE + URGENCY CUES)
+         * ============================================================================
+         */
+        const canvas = document.getElementById('bisectCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function renderLoop(now) {
+            // 1. Update Step Countdown Clock
+            if (!state.gameOver && state.runStarted && state.paceMode !== 'zen') {
+                const elapsed = now - state.stepStartTime;
+                const remaining = Math.max(0, state.stepTimeLimitMs - elapsed);
+                state.timerRatio = remaining / state.stepTimeLimitMs;
+
+                if (remaining <= 0) {
+                    loseLife('TIME EXPIRED! -1 LIFE', null);
+                }
+            } else {
+                state.timerRatio = 1.0;
+            }
+
+            // Update Timer HUD & Top Fuse Bar
+            const palette = getUrgencyPalette(state.timerRatio);
+            const timerValueEl = document.getElementById('timerValueEl');
+            const timerMaxEl = document.getElementById('timerMaxEl');
+            const timerStateDot = document.getElementById('timerStateDot');
+            const topFuseBar = document.getElementById('topFuseBar');
+            const arenaSection = document.getElementById('arenaSection');
+
+            if (state.paceMode === 'zen') {
+                timerValueEl.textContent = 'ZEN ∞';
+                timerValueEl.className = 'font-mono-num text-2xl sm:text-3xl font-extrabold text-emerald-300';
+                timerMaxEl.textContent = 'no limit';
+                topFuseBar.style.width = '100%';
+                topFuseBar.style.background = '#10b981';
+            } else if (!state.runStarted) {
+                timerValueEl.textContent = 'READY';
+                timerValueEl.className = 'font-mono-num text-2xl sm:text-3xl font-extrabold text-cyan-300';
+                timerMaxEl.textContent = `/ ${(state.stepTimeLimitMs / 1000).toFixed(2)}s`;
+                timerStateDot.className = 'w-2 h-2 rounded-full bg-cyan-400';
+                topFuseBar.style.width = '100%';
+                topFuseBar.style.background = '#22d3ee';
+            } else {
+                const remSec = ((state.timerRatio * state.stepTimeLimitMs) / 1000).toFixed(2);
+                timerValueEl.textContent = `${remSec}s`;
+                timerValueEl.className = `font-mono-num text-2xl sm:text-3xl font-extrabold ${palette.textClass}`;
+                timerMaxEl.textContent = `/ ${(state.stepTimeLimitMs / 1000).toFixed(2)}s`;
+                timerStateDot.className = `w-2 h-2 rounded-full ${palette.dotClass}`;
+
+                topFuseBar.style.width = `${Math.max(2, state.timerRatio * 100)}%`;
+                topFuseBar.style.background = palette.hex;
+            }
+
+            // Subtle arena border urgency glow when time is running low
+            if (now < state.hurtFlashUntil) {
+                arenaSection.style.borderColor = 'rgba(244, 63, 94, 0.95)';
+                arenaSection.style.boxShadow = '0 0 35px rgba(244, 63, 94, 0.45)';
+            } else if (state.runStarted && state.timerRatio < 0.35) {
+                const pulse = 0.5 + 0.5 * Math.sin(now * 0.025);
+                arenaSection.style.borderColor = `rgba(${palette.r}, ${palette.g}, ${palette.b}, ${0.55 + pulse * 0.4})`;
+                arenaSection.style.boxShadow = `0 0 28px rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.28)`;
+            } else {
+                arenaSection.style.borderColor = 'rgba(30, 41, 59, 0.9)';
+                arenaSection.style.boxShadow = 'none';
+            }
+
+            // 2. Update Camera Zoom Animation
+            if (state.anim.active) {
+                const rawT = Math.min(1, (now - state.anim.startTime) / state.anim.duration);
+                const easedT = easeOutCubic(rawT);
+                state.anim.progress = easedT;
+                state.anim.currX = state.anim.fromX + (state.anim.toX - state.anim.fromX) * easedT;
+                state.anim.currY = state.anim.fromY + (state.anim.toY - state.anim.fromY) * easedT;
+                if (rawT >= 1) {
+                    state.anim.active = false;
+                    state.anim.currX = state.relX;
+                    state.anim.currY = state.relY;
+                }
+            } else {
+                state.anim.currX = state.relX;
+                state.anim.currY = state.relY;
+                state.anim.progress = 1;
+            }
+
+            // 3. Draw Canvas Content
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const W = rect.width;
+            const H = rect.height;
+            ctx.clearRect(0, 0, W, H);
+
+            // Calculate midline visibility alpha
+            let midAlpha = 1.0;
+            if (state.gameOver) {
+                midAlpha = 1.0;
+            } else if (state.midlineMode === 'hidden') {
+                midAlpha = 0.0;
+            } else if (state.midlineMode === 'ghost') {
+                midAlpha = Math.max(0, 1 - state.depth / 5) * 0.75;
+            }
+
+            if (state.dimensions === 2) {
+                drawArena2D(W, H, now, palette, midAlpha);
+            } else {
+                drawArena1D(W, H, now, palette, midAlpha);
+            }
+
+            // 4. Draw Hurt / Mistake Vignette Flash if a life was just lost
+            if (now < state.hurtFlashUntil) {
+                const flashAlpha = ((state.hurtFlashUntil - now) / 280) * 0.28;
+                ctx.fillStyle = `rgba(244, 63, 94, ${flashAlpha})`;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            requestAnimationFrame(renderLoop);
+        }
+
+        /**
+         * 2D QUADTREE ARENA RENDERER
+         */
+        function drawArena2D(W, H, now, palette, midAlpha) {
+            const padX = Math.max(24, W * 0.04);
+            const padY = Math.max(20, H * 0.05);
+            const boxW = W - padX * 2;
+            const boxH = H - padY * 2;
+            const midX = padX + boxW * 0.5;
+            const midY = padY + boxH * 0.5;
+
+            // Highlight Hovered Quadrant
+            if (!state.gameOver && state.hoverZone) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.045)';
+                if (state.hoverZone === 'NW') ctx.fillRect(padX, padY, boxW * 0.5, boxH * 0.5);
+                if (state.hoverZone === 'NE') ctx.fillRect(midX, padY, boxW * 0.5, boxH * 0.5);
+                if (state.hoverZone === 'SW') ctx.fillRect(padX, midY, boxW * 0.5, boxH * 0.5);
+                if (state.hoverZone === 'SE') ctx.fillRect(midX, midY, boxW * 0.5, boxH * 0.5);
+            }
+
+            // Expanding Sub-Grid Lines during Camera Zoom
+            const zoomScale = state.anim.active ? (0.5 + 0.5 * state.anim.progress) : 1.0;
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.35)';
+            ctx.lineWidth = 1;
+            const gridDivs = 8;
+            for (let i = 1; i < gridDivs; i++) {
+                if (i === gridDivs / 2) continue; // Center crosshair drawn separately
+                const frac = i / gridDivs;
+                const scaled = (frac - 0.5) * zoomScale + 0.5;
+                if (scaled <= 0 || scaled >= 1) continue;
+
+                const gx = padX + scaled * boxW;
+                const gy = padY + scaled * boxH;
+
+                ctx.beginPath();
+                ctx.moveTo(gx, padY);
+                ctx.lineTo(gx, padY + boxH);
+                ctx.moveTo(padX, gy);
+                ctx.lineTo(padX + boxW, gy);
+                ctx.stroke();
+            }
+
+            // Outer 2D Bounding Box
+            ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.45)`;
+            ctx.lineWidth = 2;
+            ctx.strokeRect(padX, padY, boxW, boxH);
+
+            // Corner Quadrant Watermarks (NW, NE, SW, SE)
+            ctx.font = '700 11px "JetBrains Mono", monospace';
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.45)';
+            ctx.textAlign = 'left';
+            ctx.fillText('NW [Q]', padX + 10, padY + 20);
+            ctx.fillText('SW [A]', padX + 10, padY + boxH - 10);
+            ctx.textAlign = 'right';
+            ctx.fillText('NE [W]', padX + boxW - 10, padY + 20);
+            ctx.fillText('SE [S]', padX + boxW - 10, padY + boxH - 10);
+
+            // Bisecting Quadtree Crosshairs (X = 50%, Y = 50%)
+            if (midAlpha > 0.01) {
+                ctx.save();
+                // Crosshair color shifts toward urgent amber/crimson as time runs out
+                const crossColor = state.runStarted && state.timerRatio < 0.5
+                    ? `rgba(${palette.r}, ${palette.g}, ${palette.b}, ${midAlpha * 0.9})`
+                    : `rgba(251, 191, 36, ${midAlpha * 0.75})`;
+                ctx.strokeStyle = crossColor;
+                ctx.lineWidth = 1.75;
+                ctx.setLineDash([6, 5]);
+
+                ctx.beginPath();
+                ctx.moveTo(midX, padY);
+                ctx.lineTo(midX, padY + boxH);
+                ctx.moveTo(padX, midY);
+                ctx.lineTo(padX + boxW, midY);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Target Point Position in 2D Arena
+            const orbX = padX + state.anim.currX * boxW;
+            const orbY = padY + state.anim.currY * boxH;
+
+            drawTargetOrbWithUrgencyCue(orbX, orbY, now, palette);
+        }
+
+        /**
+         * 1D NUMBER LINE ARENA RENDERER
+         */
+        function drawArena1D(W, H, now, palette, midAlpha) {
+            const padX = Math.max(28, W * 0.055);
+            const trackW = W - padX * 2;
+            const trackY = H * 0.5;
+            const midX = padX + trackW * 0.5;
+
+            // Highlight Hovered Half
+            if (!state.gameOver && (state.hoverZone === 'L' || state.hoverZone === 'R')) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.04)';
+                const hx = state.hoverZone === 'L' ? padX : midX;
+                ctx.fillRect(hx, trackY - 70, trackW * 0.5, 140);
+            }
+
+            // Sub-grid ticks along 1D track
+            const zoomScale = state.anim.active ? (0.5 + 0.5 * state.anim.progress) : 1.0;
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.55)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 20; i++) {
+                if (i === 10) continue;
+                const frac = i / 20;
+                const centered = (frac - 0.5) * zoomScale + 0.5;
+                if (centered < 0 || centered > 1) continue;
+                const tx = padX + centered * trackW;
+                const isMajor = i % 5 === 0;
+                const tickH = isMajor ? 18 : 9;
+                ctx.beginPath();
+                ctx.moveTo(tx, trackY - tickH);
+                ctx.lineTo(tx, trackY + tickH);
+                ctx.stroke();
+            }
+
+            // Primary 1D Line
+            ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.6)`;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(padX, trackY);
+            ctx.lineTo(padX + trackW, trackY);
+            ctx.stroke();
+
+            // Left & Right End Brackets
+            [0, 1].forEach((end) => {
+                const ex = padX + end * trackW;
+                ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.85)`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(ex, trackY - 26);
+                ctx.lineTo(ex, trackY + 26);
+                ctx.stroke();
+            });
+
+            // Bisecting Midline (50%)
+            if (midAlpha > 0.01) {
+                ctx.save();
+                const crossColor = state.runStarted && state.timerRatio < 0.5
+                    ? `rgba(${palette.r}, ${palette.g}, ${palette.b}, ${midAlpha * 0.95})`
+                    : `rgba(251, 191, 36, ${midAlpha * 0.85})`;
+                ctx.strokeStyle = crossColor;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 5]);
+                ctx.beginPath();
+                ctx.moveTo(midX, 24);
+                ctx.lineTo(midX, H - 24);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            const orbX = padX + state.anim.currX * trackW;
+            drawTargetOrbWithUrgencyCue(orbX, trackY, now, palette);
+        }
+
+        /**
+         * TARGET ORB + ZERO-EYE-TRAVEL URGENCY CUE (COLOR SHIFT + CONTRACTING RING)
+         */
+        function drawTargetOrbWithUrgencyCue(orbX, orbY, now, palette) {
+            // Subtle high-frequency jitter only when timer is in critical red zone (< 25%)
+            let drawX = orbX;
+            let drawY = orbY;
+            if (state.runStarted && !state.gameOver && state.timerRatio < 0.25) {
+                const shakeAmt = (0.25 - state.timerRatio) * 10;
+                drawX += Math.sin(now * 0.09) * shakeAmt;
+                drawY += Math.cos(now * 0.11) * shakeAmt;
+            }
+
+            // 1. Dynamic Radial Glow (Shifts smoothly from Cyan -> Amber -> Crimson Red)
+            const glowRadius = state.runStarted && state.timerRatio < 0.35
+                ? 34 + Math.sin(now * 0.03) * 6
+                : 26;
+            const radial = ctx.createRadialGradient(drawX, drawY, 2, drawX, drawY, glowRadius);
+            radial.addColorStop(0, `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.95)`);
+            radial.addColorStop(0.45, `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.35)`);
+            radial.addColorStop(1, `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0)`);
+
+            ctx.fillStyle = radial;
+            ctx.beginPath();
+            ctx.arc(drawX, drawY, glowRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Contracting Urgency Ring + Circular Progress Arc around the Target Dot
+            if (state.runStarted && !state.gameOver && state.paceMode !== 'zen') {
+                // Ring shrinks from 36px radius down to 8px (collapsing onto the dot at 0.0s)
+                const collapseRadius = 8 + state.timerRatio * 28;
+
+                // Faint full reference circle at collapse radius
+                ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.28)`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(drawX, drawY, collapseRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Bright remaining-time arc around the collapsing ring
+                const startAngle = -Math.PI / 2;
+                const endAngle = startAngle + state.timerRatio * Math.PI * 2;
+                ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.95)`;
+                ctx.lineWidth = state.timerRatio < 0.3 ? 3 : 2.2;
+                ctx.beginPath();
+                ctx.arc(drawX, drawY, collapseRadius, startAngle, endAngle);
+                ctx.stroke();
+            }
+
+            // 3. Crisp Target Core Dot
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(drawX, drawY, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = palette.hex;
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+        }
+
+        /**
+         * ============================================================================
+         * 8. INPUT HANDLERS (DIRECT CANVAS CLICK/TAP, BUTTONS, KEYBOARD HOTKEYS)
+         * ============================================================================
+         */
+        const canvasContainer = document.getElementById('canvasContainer');
+
+        function getZoneFromPointer(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            const normX = (clientX - rect.left) / rect.width;
+            const normY = (clientY - rect.top) / rect.height;
+            if (state.dimensions === 1) {
+                return normX < 0.5 ? 'L' : 'R';
+            } else {
+                const isWest = normX < 0.5;
+                const isNorth = normY < 0.5;
+                return (isNorth ? 'N' : 'S') + (isWest ? 'W' : 'E');
+            }
+        }
+
+        canvasContainer.addEventListener('pointermove', (e) => {
+            if (state.gameOver) {
+                state.hoverZone = null;
+                return;
+            }
+            state.hoverZone = getZoneFromPointer(e.clientX, e.clientY);
+        });
+
+        canvasContainer.addEventListener('pointerleave', () => {
+            state.hoverZone = null;
+        });
+
+        canvasContainer.addEventListener('pointerdown', (e) => {
+            if (state.gameOver) return;
+            if (e.target.closest('#gameOverModal')) return;
+            const zone = getZoneFromPointer(e.clientX, e.clientY);
+            if (state.dimensions === 1) {
+                handleCut1D(zone);
+            } else {
+                handleCut2D(zone);
+            }
+        });
+
+        // 1D Button Deck Listeners
+        document.getElementById('btnLeft1D').addEventListener('click', () => handleCut1D('L'));
+        document.getElementById('btnRight1D').addEventListener('click', () => handleCut1D('R'));
+
+        // 2D Quadrant Button Deck Listeners
+        document.querySelectorAll('.quad-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                handleCut2D(btn.dataset.quad);
+            });
+        });
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+
+            if (e.key === 'r' || e.key === 'R' || (e.key === ' ' && state.gameOver)) {
+                e.preventDefault();
+                initGame();
+                return;
+            }
+
+            if (state.gameOver) return;
+
+            if (state.dimensions === 1) {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                    e.preventDefault();
+                    handleCut1D('L');
+                } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                    e.preventDefault();
+                    handleCut1D('R');
+                }
+            } else {
+                const k = e.key.toUpperCase();
+                if (k === 'Q' || k === '7') { e.preventDefault(); handleCut2D('NW'); }
+                else if (k === 'W' || k === 'E' || k === '9') { e.preventDefault(); handleCut2D('NE'); }
+                else if (k === 'A' || k === '1') { e.preventDefault(); handleCut2D('SW'); }
+                else if (k === 'S' || k === 'D' || k === '3') { e.preventDefault(); handleCut2D('SE'); }
+            }
+        });
+
+        // Top Bar Controls: 1D vs 2D Dimension Switcher
+        document.querySelectorAll('.dim-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.dimensions = parseInt(btn.dataset.dim, 10);
+                document.querySelectorAll('.dim-btn').forEach((b) => {
+                    b.className = 'dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white';
+                });
+                btn.className = 'dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40';
+                initGame();
+            });
+        });
+
+        // Timer Pace Mode Switcher
+        document.querySelectorAll('.pace-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.paceMode = btn.dataset.pace;
+                document.querySelectorAll('.pace-btn').forEach((b) => {
+                    b.className = 'pace-btn px-2 py-1 rounded-md font-mono-num font-semibold transition text-slate-400 hover:text-slate-200';
+                });
+                btn.className = 'pace-btn px-2 py-1 rounded-md font-mono-num font-semibold transition bg-rose-500/20 text-rose-300 border border-rose-500/40';
+                initGame();
+            });
+        });
+
+        // Target Generator Switcher
+        document.querySelectorAll('.target-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.targetMode = btn.dataset.target;
+                document.querySelectorAll('.target-btn').forEach((b) => {
+                    b.className = 'target-btn px-2 py-1 rounded-md font-mono-num font-semibold transition text-slate-400 hover:text-slate-200';
+                });
+                btn.className = 'target-btn px-2 py-1 rounded-md font-mono-num font-semibold transition bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+                initGame();
+            });
+        });
+
+        // Midline Visibility Switcher
+        document.querySelectorAll('.midline-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.midlineMode = btn.dataset.midline;
+                document.querySelectorAll('.midline-btn').forEach((b) => {
+                    b.className = 'midline-btn px-2 py-1 rounded-md font-medium transition text-slate-400 hover:text-slate-200';
+                });
+                btn.className = 'midline-btn px-2 py-1 rounded-md font-medium transition bg-amber-500/20 text-amber-300 border border-amber-500/40';
+            });
+        });
+
+        // Zoom Duration Switcher
+        document.querySelectorAll('.zoom-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.zoomDurationMs = parseInt(btn.dataset.zoom, 10);
+                document.querySelectorAll('.zoom-btn').forEach((b) => {
+                    b.className = 'zoom-btn px-2 py-1 rounded-md font-mono-num font-medium transition text-slate-400 hover:text-slate-200';
+                });
+                btn.className = 'zoom-btn px-2 py-1 rounded-md font-mono-num font-medium transition bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+            });
+        });
+
+        // Sound & Restart Buttons
+        document.getElementById('soundToggleBtn').addEventListener('click', () => {
+            sfx.enabled = !sfx.enabled;
+            document.getElementById('soundIcon').textContent = sfx.enabled ? '🔊' : '🔇';
+        });
+        document.getElementById('restartBtn').addEventListener('click', () => initGame());
+        document.getElementById('quickResetBtn').addEventListener('click', () => initGame());
+
+        window.onload = function () {
+            resizeCanvas();
+            initGame();
+            requestAnimationFrame(renderLoop);
+        };
+    </script>
+</body>
+</html>

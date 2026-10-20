@@ -1,0 +1,10 @@
+{
+  "name": "PI-SECT // 1D & 2D Quadtree Time-Attack Arcade",
+  "short_name": "PI-SECT",
+  "description": "Infinite-Precision Reflex Binary & Quadtree Search Game",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#050811",
+  "theme_color": "#050811",
+  "orientation": "any"
+}

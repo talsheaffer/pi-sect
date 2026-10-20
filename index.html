@@ -125,7 +125,8 @@
                 <!-- Midline Visibility Mode -->
                 <div class="flex items-center bg-slate-900/90 p-1 rounded-lg border border-slate-800">
                     <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 px-1.5 hidden xl:inline">Grid</span>
-                    <button data-midline="demarcated" class="midline-btn px-2 py-1 rounded-md font-medium transition bg-amber-500/20 text-amber-300 border border-amber-500/40">Crosshair</button>
+                    <button data-midline="multidepth" class="midline-btn px-2 py-1 rounded-md font-medium transition bg-amber-500/20 text-amber-300 border border-amber-500/40" title="Show Primary (1/2), Secondary (1/4), and Tertiary (1/8) foresight crosshairs">1°/2°/3°</button>
+                    <button data-midline="demarcated" class="midline-btn px-2 py-1 rounded-md font-medium transition text-slate-400 hover:text-slate-200" title="Show only primary 50% crosshair">1° Only</button>
                     <button data-midline="ghost" class="midline-btn px-2 py-1 rounded-md font-medium transition text-slate-400 hover:text-slate-200" title="Crosshairs fade out after depth 4">Ghost</button>
                     <button data-midline="hidden" class="midline-btn px-2 py-1 rounded-md font-medium transition text-slate-400 hover:text-slate-200" title="Pure spatial eye estimation">Hidden</button>
                 </div>
@@ -140,66 +141,56 @@
     </header>
 
     <!-- MAIN CONTENT CONTAINER -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-5 py-3 flex flex-col justify-between gap-3">
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-5 py-2.5 flex flex-col justify-between gap-2.5">
 
-        <!-- SECTION 1: 3-LIVES SHIELD HUD, STEP COUNTDOWN & LOCKED DIGITS -->
-        <section class="grid grid-cols-1 lg:grid-cols-12 gap-2.5">
+        <!-- SECTION 1: COMPACT STEP COUNTDOWN, LOCKED DIGITS & TELEMETRY -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-2">
             
-            <!-- Left 5 Cols: 3 Lives + Active Step Countdown Readout -->
-            <div class="lg:col-span-5 bg-slate-900/85 border border-slate-800/90 rounded-xl p-3 flex items-center justify-between gap-3">
-                
-                <!-- 3 Lives Display -->
-                <div class="flex flex-col">
-                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 mb-1">Lives Remaining</span>
-                    <div id="livesContainer" class="flex items-center gap-2">
-                        <!-- Populated by JS: 3 glowing hearts/shields -->
-                    </div>
+            <!-- Left 3 Cols: Active Step Countdown Readout -->
+            <div class="lg:col-span-3 bg-slate-900/85 border border-slate-800/90 rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5">
+                    <span id="timerStateDot" class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    <span id="timerLabel" class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400">Step Clock</span>
                 </div>
-
-                <div class="h-8 w-px bg-slate-800"></div>
-
-                <!-- Live Step Timer & Visual Cue Legend -->
-                <div class="flex-1 flex flex-col items-end">
-                    <div class="flex items-center gap-1.5">
-                        <span id="timerStateDot" class="w-2 h-2 rounded-full bg-cyan-400"></span>
-                        <span id="timerLabel" class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400">Step Clock</span>
-                    </div>
-                    <div class="flex items-baseline gap-1.5 mt-0.5">
-                        <span id="timerValueEl" class="font-mono-num text-2xl sm:text-3xl font-extrabold text-cyan-300">READY</span>
-                        <span id="timerMaxEl" class="font-mono-num text-xs text-slate-500">/ 1.80s</span>
-                    </div>
+                <div class="flex items-baseline gap-1.5">
+                    <span id="timerValueEl" class="font-mono-num text-xl sm:text-2xl font-extrabold text-cyan-300">READY</span>
+                    <span id="timerMaxEl" class="font-mono-num text-xs text-slate-500">/ 1.80s</span>
                 </div>
             </div>
 
-            <!-- Middle 4 Cols: Coordinate Convergence Ribbon -->
-            <div class="lg:col-span-4 bg-slate-900/85 border border-slate-800/90 rounded-xl p-3 flex flex-col justify-between overflow-hidden">
+            <!-- Middle 5 Cols: Coordinate Convergence Ribbon -->
+            <div class="lg:col-span-5 bg-slate-900/85 border border-slate-800/90 rounded-xl px-3 py-2 flex flex-col justify-between overflow-hidden">
                 <div class="flex items-center justify-between text-[10px] font-mono-num uppercase tracking-wider text-slate-400">
                     <span id="coordHeaderLabel">Locked Coordinate Precision</span>
                     <span class="text-cyan-300 font-bold"><span id="lockedCountEl">1</span> digits</span>
                 </div>
-                <div id="digitsRibbon" class="font-mono-num text-xs sm:text-sm tracking-wider whitespace-nowrap overflow-x-auto py-1">
+                <div id="digitsRibbon" class="font-mono-num text-xs sm:text-sm tracking-wider whitespace-nowrap overflow-x-auto py-0.5">
                     <!-- Populated dynamically with X (and Y in 2D) locked digits -->
                 </div>
             </div>
 
-            <!-- Right 3 Cols: Score/Depth & Speed Telemetry -->
-            <div class="lg:col-span-3 grid grid-cols-2 gap-2">
-                <div class="bg-slate-900/85 border border-slate-800/90 rounded-xl p-2.5 flex flex-col justify-between">
-                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400">Depth</span>
-                    <div class="flex items-baseline gap-1">
-                        <span id="depthEl" class="font-mono-num text-2xl font-extrabold text-white">0</span>
-                        <span id="zoomScaleEl" class="text-[10px] font-mono-num text-cyan-400">1x</span>
+            <!-- Right 4 Cols: Score/Depth & Speed Telemetry -->
+            <div class="lg:col-span-4 grid grid-cols-2 gap-2">
+                <div class="bg-slate-900/85 border border-slate-800/90 rounded-xl px-3 py-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 block">Depth</span>
+                        <span id="bestDepthEl" class="text-[10px] font-mono-num text-slate-500">Best: 0</span>
                     </div>
-                    <span id="bestDepthEl" class="text-[10px] font-mono-num text-slate-400">Best: 0</span>
+                    <div class="text-right">
+                        <span id="depthEl" class="font-mono-num text-xl sm:text-2xl font-extrabold text-white">0</span>
+                        <span id="zoomScaleEl" class="text-[10px] font-mono-num text-cyan-400 block">1x</span>
+                    </div>
                 </div>
 
-                <div class="bg-slate-900/85 border border-slate-800/90 rounded-xl p-2.5 flex flex-col justify-between">
-                    <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400">Pace</span>
-                    <div class="flex items-baseline gap-1">
-                        <span id="cpsEl" class="font-mono-num text-2xl font-extrabold text-emerald-400">0.0</span>
+                <div class="bg-slate-900/85 border border-slate-800/90 rounded-xl px-3 py-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-mono-num uppercase tracking-wider text-slate-400 block">Pace</span>
+                        <span id="msPerTapEl" class="text-[10px] font-mono-num text-slate-500">-- ms/cut</span>
+                    </div>
+                    <div class="flex items-baseline gap-0.5">
+                        <span id="cpsEl" class="font-mono-num text-xl sm:text-2xl font-extrabold text-emerald-400">0.0</span>
                         <span class="text-[10px] font-mono-num text-slate-500">/s</span>
                     </div>
-                    <span id="msPerTapEl" class="text-[10px] font-mono-num text-slate-400">-- ms/cut</span>
                 </div>
             </div>
         </section>
@@ -229,6 +220,11 @@
             <!-- Interactive Canvas Container -->
             <div id="canvasContainer" class="relative w-full h-72 sm:h-80 md:h-96 cursor-crosshair touch-manipulation select-none">
                 <canvas id="bisectCanvas" class="block w-full h-full"></canvas>
+
+                <!-- Suspended 3-Heart Lives Display (Top-Left of Main Screen, No Background) -->
+                <div id="livesContainer" class="pointer-events-none absolute top-3 left-3.5 sm:top-3.5 sm:left-4 z-20 flex items-center gap-1.5" title="3 Lives Remaining">
+                    <!-- Populated by JS: 3 suspended glowing hearts -->
+                </div>
 
                 <!-- Floating Life Lost / Status Callout Banner (Non-blocking) -->
                 <div id="statusToast" class="pointer-events-none opacity-0 transition-opacity duration-150 absolute top-4 left-1/2 -translate-x-1/2 z-20">
@@ -396,7 +392,7 @@
                     <div class="flex items-start gap-2">
                         <span class="text-cyan-400 font-mono-num font-extrabold text-sm">01.</span>
                         <div>
-                            <span class="font-bold text-white">Locate the Target Orb:</span> Check which side of the dashed <span class="text-amber-300 font-semibold">50% crosshair</span> the glowing dot is in.
+                            <span class="font-bold text-white">Read the Crosshairs:</span> Check which side of the <span class="text-amber-300 font-semibold">50% (½) primary crosshair</span> the orb is in. Faded <span class="text-amber-200/80">2° (¼, ¾)</span> &amp; <span class="text-slate-400">3° (⅛..⅞)</span> lines let you plan 2–3 cuts ahead!
                         </div>
                     </div>
                     <div class="flex items-start gap-2">
@@ -408,7 +404,7 @@
                     <div class="flex items-start gap-2">
                         <span class="text-rose-400 font-mono-num font-extrabold text-sm">03.</span>
                         <div>
-                            <span class="font-bold text-white">3 Lives (❤️) &amp; Zoom:</span> Every cut zooms in ($2\times$ in 1D, $4\times$ in 2D) to lock in digits of $\pi, \phi, \sqrt{2}$. Mistakes or timeouts cost 1 life.
+                            <span class="font-bold text-white">3 Lives (❤️) &amp; Zoom:</span> Every cut zooms in (<span class="text-cyan-300 font-mono-num font-bold">2×</span> in 1D, <span class="text-cyan-300 font-mono-num font-bold">4×</span> in 2D) to lock in digits of <span class="text-amber-300 font-mono-num font-bold">π, φ, √2</span>. Mistakes or timeouts cost 1 life.
                         </div>
                     </div>
                 </div>
@@ -693,7 +689,7 @@
             dimensions: 2,             // 1 (1D Line) | 2 (2D Quadtree)
             paceMode: 'adaptive',      // 'adaptive' | 'blitz' | 'relaxed' | 'zen'
             targetMode: 'random',      // 'random' | 'pi' | 'phi'
-            midlineMode: 'demarcated', // 'demarcated' | 'ghost' | 'hidden'
+            midlineMode: 'multidepth', // 'multidepth' (1°/2°/3°) | 'demarcated' (1° only) | 'ghost' | 'hidden'
             zoomDurationMs: 75,        // 75 | 150
 
             // Exact BigInt bounds for X and Y
@@ -1086,18 +1082,14 @@
                 const alive = i < state.lives;
                 if (alive) {
                     html += `
-                        <div class="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/60 flex items-center justify-center shadow-sm shadow-rose-500/30 transition-all duration-200">
-                            <svg class="w-4 h-4 text-rose-400 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </div>`;
+                        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-rose-500 fill-current drop-shadow-[0_0_8px_rgba(244,63,94,0.85)] transition-all duration-200" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>`;
                 } else {
                     html += `
-                        <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center opacity-35 transition-all duration-200">
-                            <svg class="w-4 h-4 text-slate-600 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                        </div>`;
+                        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-slate-600/45 stroke-current fill-transparent stroke-[1.8] transition-all duration-200" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>`;
                 }
             }
             container.innerHTML = html;
@@ -1376,53 +1368,84 @@
                 if (state.hoverZone === 'SE') ctx.fillRect(midX, midY, boxW * 0.5, boxH * 0.5);
             }
 
-            // Expanding Sub-Grid Lines during Camera Zoom
-            const zoomScale = state.anim.active ? (0.5 + 0.5 * state.anim.progress) : 1.0;
-            ctx.strokeStyle = 'rgba(51, 65, 85, 0.35)';
-            ctx.lineWidth = 1;
-            const gridDivs = 8;
-            for (let i = 1; i < gridDivs; i++) {
-                if (i === gridDivs / 2) continue; // Center crosshair drawn separately
-                const frac = i / gridDivs;
-                const scaled = (frac - 0.5) * zoomScale + 0.5;
-                if (scaled <= 0 || scaled >= 1) continue;
-
-                const gx = padX + scaled * boxW;
-                const gy = padY + scaled * boxH;
-
-                ctx.beginPath();
-                ctx.moveTo(gx, padY);
-                ctx.lineTo(gx, padY + boxH);
-                ctx.moveTo(padX, gy);
-                ctx.lineTo(padX + boxW, gy);
-                ctx.stroke();
-            }
-
             // Outer 2D Bounding Box
             ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.45)`;
             ctx.lineWidth = 2;
             ctx.strokeRect(padX, padY, boxW, boxH);
 
-            // Corner Quadrant Watermarks (NW, NE, SW, SE)
+            // Corner Quadrant Watermarks (NW shifted right of the top-left suspended hearts)
             ctx.font = '700 11px "JetBrains Mono", monospace';
             ctx.fillStyle = 'rgba(100, 116, 139, 0.45)';
             ctx.textAlign = 'left';
-            ctx.fillText('NW [Q]', padX + 10, padY + 20);
+            ctx.fillText('NW [Q]', padX + 92, padY + 20);
             ctx.fillText('SW [A]', padX + 10, padY + boxH - 10);
             ctx.textAlign = 'right';
             ctx.fillText('NE [W]', padX + boxW - 10, padY + 20);
             ctx.fillText('SE [S]', padX + boxW - 10, padY + boxH - 10);
 
-            // Bisecting Quadtree Crosshairs (X = 50%, Y = 50%)
+            // Multi-Depth Foresight Crosshairs (Primary 1/2, Secondary 1/4 & 3/4, Tertiary 1/8..7/8)
             if (midAlpha > 0.01) {
+                const showSubCrosshairs = state.midlineMode === 'multidepth' || state.midlineMode === 'ghost';
+                const isUrgent = state.runStarted && state.timerRatio < 0.5;
+                const baseR = isUrgent ? palette.r : 251;
+                const baseG = isUrgent ? palette.g : 191;
+                const baseB = isUrgent ? palette.b : 36;
+
+                // 1. TERTIARY CROSSHAIRS (Depth +3 cuts: 1/8, 3/8, 5/8, 7/8 — Most Distant / Lowest Opacity)
+                if (showSubCrosshairs) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.19})`;
+                    ctx.lineWidth = 1.0;
+                    ctx.setLineDash([2, 5]);
+                    const tertiaryFracs = [0.125, 0.375, 0.625, 0.875];
+                    ctx.beginPath();
+                    for (const f of tertiaryFracs) {
+                        const tx = padX + f * boxW;
+                        const ty = padY + f * boxH;
+                        ctx.moveTo(tx, padY);
+                        ctx.lineTo(tx, padY + boxH);
+                        ctx.moveTo(padX, ty);
+                        ctx.lineTo(padX + boxW, ty);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // 2. SECONDARY CROSSHAIRS (Depth +2 cuts: 1/4, 3/4 — Medium Distance / Medium Opacity)
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.44})`;
+                    ctx.lineWidth = 1.35;
+                    ctx.setLineDash([4, 4]);
+                    const secondaryFracs = [
+                        { f: 0.25, label: '¼' },
+                        { f: 0.75, label: '¾' }
+                    ];
+                    ctx.beginPath();
+                    for (const { f } of secondaryFracs) {
+                        const sx = padX + f * boxW;
+                        const sy = padY + f * boxH;
+                        ctx.moveTo(sx, padY);
+                        ctx.lineTo(sx, padY + boxH);
+                        ctx.moveTo(padX, sy);
+                        ctx.lineTo(padX + boxW, sy);
+                    }
+                    ctx.stroke();
+
+                    // Subtle ¼ and ¾ foresight markers along top & left margins
+                    ctx.font = '600 10px "JetBrains Mono", monospace';
+                    ctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.55})`;
+                    ctx.textAlign = 'center';
+                    for (const { f, label } of secondaryFracs) {
+                        ctx.fillText(label, padX + f * boxW, padY - 5);
+                        ctx.fillText(label, padX - 10, padY + f * boxH + 3);
+                    }
+                    ctx.restore();
+                }
+
+                // 3. PRIMARY CROSSHAIR (Depth +1 cut: 1/2 — Immediate Cut / Highest Opacity)
                 ctx.save();
-                // Crosshair color shifts toward urgent amber/crimson as time runs out
-                const crossColor = state.runStarted && state.timerRatio < 0.5
-                    ? `rgba(${palette.r}, ${palette.g}, ${palette.b}, ${midAlpha * 0.9})`
-                    : `rgba(251, 191, 36, ${midAlpha * 0.75})`;
-                ctx.strokeStyle = crossColor;
-                ctx.lineWidth = 1.75;
-                ctx.setLineDash([6, 5]);
+                ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.88})`;
+                ctx.lineWidth = 2.0;
+                ctx.setLineDash([7, 5]);
 
                 ctx.beginPath();
                 ctx.moveTo(midX, padY);
@@ -1430,6 +1453,12 @@
                 ctx.moveTo(padX, midY);
                 ctx.lineTo(padX + boxW, midY);
                 ctx.stroke();
+
+                ctx.font = '700 11px "JetBrains Mono", monospace';
+                ctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.9})`;
+                ctx.textAlign = 'center';
+                ctx.fillText('½', midX, padY - 5);
+                ctx.fillText('½', padX - 10, midY + 4);
                 ctx.restore();
             }
 
@@ -1456,24 +1485,6 @@
                 ctx.fillRect(hx, trackY - 70, trackW * 0.5, 140);
             }
 
-            // Sub-grid ticks along 1D track
-            const zoomScale = state.anim.active ? (0.5 + 0.5 * state.anim.progress) : 1.0;
-            ctx.strokeStyle = 'rgba(51, 65, 85, 0.55)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i <= 20; i++) {
-                if (i === 10) continue;
-                const frac = i / 20;
-                const centered = (frac - 0.5) * zoomScale + 0.5;
-                if (centered < 0 || centered > 1) continue;
-                const tx = padX + centered * trackW;
-                const isMajor = i % 5 === 0;
-                const tickH = isMajor ? 18 : 9;
-                ctx.beginPath();
-                ctx.moveTo(tx, trackY - tickH);
-                ctx.lineTo(tx, trackY + tickH);
-                ctx.stroke();
-            }
-
             // Primary 1D Line
             ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.6)`;
             ctx.lineWidth = 4;
@@ -1493,19 +1504,70 @@
                 ctx.stroke();
             });
 
-            // Bisecting Midline (50%)
+            // Multi-Depth 1D Foresight Crosshairs (Primary 1/2, Secondary 1/4 & 3/4, Tertiary 1/8..7/8)
             if (midAlpha > 0.01) {
+                const showSubCrosshairs = state.midlineMode === 'multidepth' || state.midlineMode === 'ghost';
+                const isUrgent = state.runStarted && state.timerRatio < 0.5;
+                const baseR = isUrgent ? palette.r : 251;
+                const baseG = isUrgent ? palette.g : 191;
+                const baseB = isUrgent ? palette.b : 36;
+
+                if (showSubCrosshairs) {
+                    // 1. TERTIARY 1D CROSSHAIRS (Depth +3: 1/8, 3/8, 5/8, 7/8 — Faded & Shorter)
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.22})`;
+                    ctx.lineWidth = 1.0;
+                    ctx.setLineDash([2, 5]);
+                    const tertiaryFracs = [0.125, 0.375, 0.625, 0.875];
+                    ctx.beginPath();
+                    for (const f of tertiaryFracs) {
+                        const tx = padX + f * trackW;
+                        ctx.moveTo(tx, 68);
+                        ctx.lineTo(tx, H - 68);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // 2. SECONDARY 1D CROSSHAIRS (Depth +2: 1/4, 3/4 — Medium Opacity & Height)
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.46})`;
+                    ctx.lineWidth = 1.4;
+                    ctx.setLineDash([4, 4]);
+                    const secondaryFracs = [
+                        { f: 0.25, label: '¼ (2°)' },
+                        { f: 0.75, label: '¾ (2°)' }
+                    ];
+                    ctx.beginPath();
+                    for (const { f } of secondaryFracs) {
+                        const sx = padX + f * trackW;
+                        ctx.moveTo(sx, 44);
+                        ctx.lineTo(sx, H - 44);
+                    }
+                    ctx.stroke();
+
+                    ctx.font = '600 10px "JetBrains Mono", monospace';
+                    ctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.6})`;
+                    ctx.textAlign = 'center';
+                    for (const { f, label } of secondaryFracs) {
+                        ctx.fillText(label, padX + f * trackW, 38);
+                    }
+                    ctx.restore();
+                }
+
+                // 3. PRIMARY 1D CROSSHAIR (Depth +1: 1/2 — Full Height & Highest Opacity)
                 ctx.save();
-                const crossColor = state.runStarted && state.timerRatio < 0.5
-                    ? `rgba(${palette.r}, ${palette.g}, ${palette.b}, ${midAlpha * 0.95})`
-                    : `rgba(251, 191, 36, ${midAlpha * 0.85})`;
-                ctx.strokeStyle = crossColor;
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 5]);
+                ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.92})`;
+                ctx.lineWidth = 2.2;
+                ctx.setLineDash([7, 5]);
                 ctx.beginPath();
-                ctx.moveTo(midX, 24);
-                ctx.lineTo(midX, H - 24);
+                ctx.moveTo(midX, 22);
+                ctx.lineTo(midX, H - 22);
                 ctx.stroke();
+
+                ctx.font = '700 11px "JetBrains Mono", monospace';
+                ctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.95})`;
+                ctx.textAlign = 'center';
+                ctx.fillText('½ (1°)', midX, 16);
                 ctx.restore();
             }
 

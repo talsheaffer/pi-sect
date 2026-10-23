@@ -199,7 +199,7 @@
         </section>
 
         <!-- SECTION 2: THE BISECTION ARENA (1D & 2D QUADTREE CANVAS) -->
-        <section id="arenaSection" class="relative bg-slate-950 border-2 border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-colors duration-100">
+        <section id="arenaSection" class="relative flex-1 bg-slate-950 border-2 border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-colors duration-100">
             
             <!-- Top-Edge Dual-Symmetric Laser Fuse Bar (Burns inward & shifts Cyan -> Amber -> Red) -->
             <div class="w-full h-1.5 bg-slate-900/90 relative overflow-hidden">
@@ -221,8 +221,8 @@
             </div>
 
             <!-- Interactive Canvas Container -->
-            <div id="canvasContainer" class="relative w-full h-72 sm:h-80 md:h-96 cursor-crosshair touch-manipulation select-none">
-                <canvas id="bisectCanvas" class="block w-full h-full"></canvas>
+            <div id="canvasContainer" class="relative flex-1 w-full min-h-[18rem] sm:min-h-[20rem] md:min-h-[24rem] cursor-crosshair touch-manipulation select-none">
+                <canvas id="bisectCanvas" class="absolute inset-0 block w-full h-full"></canvas>
 
                 <!-- Suspended 3-Heart Lives Display (Top-Left of Main Screen, No Background) -->
                 <div id="livesContainer" class="pointer-events-none absolute top-3 left-3.5 sm:top-3.5 sm:left-4 z-20 flex items-center gap-1.5" title="3 Lives Remaining">
@@ -1311,11 +1311,18 @@
         function resizeCanvas() {
             const rect = canvas.parentElement.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const targetW = Math.round(rect.width * dpr);
+            const targetH = Math.round(rect.height * dpr);
+            if (canvas.width !== targetW || canvas.height !== targetH) {
+                canvas.width = targetW;
+                canvas.height = targetH;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
         }
         window.addEventListener('resize', resizeCanvas);
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+        }
 
         function easeOutCubic(t) {
             return 1 - Math.pow(1 - t, 3);
@@ -1567,20 +1574,26 @@
         }
 
         /**
-         * 2D DIAMOND ARENA RENDERER (45°-ROTATED BOARD: UP, DOWN, LEFT, RIGHT)
+         * 2D DIAMOND ARENA GEOMETRY & RENDERER (45°-ROTATED BOARD FITTED TO FULL ARENA WIDTH)
          */
-        function drawArenaDiamond(W, H, now, palette, midAlpha) {
+        function getDiamondMetrics(W, H) {
             const cx = W * 0.5;
             const cy = H * 0.5;
-            const padX = W < 440 ? 54 : 88;
-            const padY = 26;
-            const R = Math.max(58, Math.min(W * 0.5 - padX, H * 0.5 - padY));
+            const padX = Math.max(18, W * 0.025);
+            const padY = Math.max(20, H * 0.05);
+            const Rx = Math.max(60, W * 0.5 - padX);
+            const Ry = Math.max(60, H * 0.5 - padY);
+            return { cx, cy, padX, padY, Rx, Ry };
+        }
 
-            // Map normalized (u, v) in [0, 1]^2 rotated +45° clockwise onto canvas (x, y):
+        function drawArenaDiamond(W, H, now, palette, midAlpha) {
+            const { cx, cy, Rx, Ry } = getDiamondMetrics(W, H);
+
+            // Map normalized (u, v) in [0, 1]^2 rotated +45° clockwise onto full-width canvas diamond:
             // (0, 0) -> Top, (1, 0) -> Right, (1, 1) -> Bottom, (0, 1) -> Left
             const uvPt = (u, v) => ({
-                x: cx + (u - v) * R,
-                y: cy + (u + v - 1) * R
+                x: cx + (u - v) * Rx,
+                y: cy + (u + v - 1) * Ry
             });
 
             const fillSubDiamond = (u0, u1, v0, v1, fillStyle) => {
@@ -1617,7 +1630,7 @@
                 fillSubDiamond(u0, u1, v0, v1, 'rgba(244, 63, 94, 0.22)');
             }
 
-            // Outer 45°-Rotated Diamond Bounding Box
+            // Outer Full-Width Diamond Bounding Polygon
             const topV = uvPt(0, 0);
             const rightV = uvPt(1, 0);
             const bottomV = uvPt(1, 1);
@@ -1633,28 +1646,34 @@
             ctx.closePath();
             ctx.stroke();
 
-            // Compass Tip Watermarks outside the 4 Diamond Vertices
+            // Wedge Watermarks tucked cleanly inside the 4 Diamond Tips
             ctx.font = '700 11px "JetBrains Mono", monospace';
-            ctx.fillStyle = 'rgba(148, 163, 184, 0.58)';
-            const compactLabels = W < 460;
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.5)';
+            const compactLabels = W < 520;
+            const sideInset = compactLabels ? 18 : Math.max(28, Rx * 0.1);
 
             ctx.textAlign = 'center';
-            ctx.fillText('▲ UP [↑/W]', cx, topV.y - 8);
-            ctx.fillText('▼ DOWN [↓/S]', cx, bottomV.y + 16);
-
-            ctx.textAlign = 'right';
-            ctx.fillText(compactLabels ? '◀ ←/A' : '◀ LEFT [←/A]', leftV.x - 8, cy + 4);
+            ctx.fillText('▲ UP [↑/W]', cx, cy - Ry * 0.72 + 4);
+            ctx.fillText('▼ DOWN [↓/S]', cx, cy + Ry * 0.72 + 4);
 
             ctx.textAlign = 'left';
-            ctx.fillText(compactLabels ? '→/D ▶' : '[→/D] RIGHT ▶', rightV.x + 8, cy + 4);
+            ctx.fillText(compactLabels ? '◀ ←/A' : '◀ LEFT [←/A]', leftV.x + sideInset, cy + 4);
 
-            // Multi-Depth Foresight Crosshairs (Rotated 45° along u and v axes)
+            ctx.textAlign = 'right';
+            ctx.fillText(compactLabels ? '→/D ▶' : '[→/D] RIGHT ▶', rightV.x - sideInset, cy + 4);
+
+            // Multi-Depth Foresight Crosshairs (Rotated along u and v axes)
             if (midAlpha > 0.01) {
                 const showSubCrosshairs = state.midlineMode === 'multidepth' || state.midlineMode === 'ghost';
                 const isUrgent = state.runStarted && state.timerRatio < 0.5;
                 const baseR = isUrgent ? palette.r : 251;
                 const baseG = isUrgent ? palette.g : 191;
                 const baseB = isUrgent ? palette.b : 36;
+
+                // Outward unit normal offsets along Top-Right and Top-Left edges for ½, ¼, ¾ labels
+                const edgeLen = Math.hypot(Rx, Ry);
+                const normX = (Ry / edgeLen) * 11;
+                const normY = -(Rx / edgeLen) * 11;
 
                 // 1. TERTIARY CROSSHAIRS (Depth +3: 1/8, 3/8, 5/8, 7/8)
                 if (showSubCrosshairs) {
@@ -1707,8 +1726,8 @@
                     for (const { f, label } of secondaryFracs) {
                         const tr = uvPt(f, 0);
                         const tl = uvPt(0, f);
-                        ctx.fillText(label, tr.x + 9, tr.y - 5);
-                        ctx.fillText(label, tl.x - 9, tl.y - 5);
+                        ctx.fillText(label, tr.x + normX, tr.y + normY + 3);
+                        ctx.fillText(label, tl.x - normX, tl.y + normY + 3);
                     }
                     ctx.restore();
                 }
@@ -1734,12 +1753,12 @@
                 ctx.font = '700 11px "JetBrains Mono", monospace';
                 ctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.9})`;
                 ctx.textAlign = 'center';
-                ctx.fillText('½', uMid0.x + 10, uMid0.y - 5);
-                ctx.fillText('½', vMid0.x - 10, vMid0.y - 5);
+                ctx.fillText('½', uMid0.x + normX, uMid0.y + normY + 3);
+                ctx.fillText('½', vMid0.x - normX, vMid0.y + normY + 3);
                 ctx.restore();
             }
 
-            // Target Point Position in 45°-Rotated Diamond Arena
+            // Target Point Position in Full-Width Diamond Arena
             const orb = uvPt(state.anim.currX, state.anim.currY);
             drawTargetOrbWithUrgencyCue(orb.x, orb.y, now, palette);
         }
@@ -1924,10 +1943,11 @@
             if (state.dimensions === 1) {
                 return px < rect.width * 0.5 ? 'L' : 'R';
             } else if (state.diamondMode) {
-                const dx = px - rect.width * 0.5;
-                const dy = py - rect.height * 0.5;
-                const isWest = (dx + dy) < 0;
-                const isNorth = (dy - dx) < 0;
+                const { cx, cy, Rx, Ry } = getDiamondMetrics(rect.width, rect.height);
+                const nx = (px - cx) / Rx;
+                const ny = (py - cy) / Ry;
+                const isWest = (nx + ny) < 0;
+                const isNorth = (ny - nx) < 0;
                 return (isNorth ? 'N' : 'S') + (isWest ? 'W' : 'E');
             } else {
                 const isWest = px < rect.width * 0.5;

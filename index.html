@@ -91,13 +91,16 @@
                     <p class="text-[10px] text-slate-400 hidden xl:block font-mono-num">Infinite-Precision Reflex Search</p>
                 </div>
 
-                <!-- 1D vs 2D Dimension Switcher -->
+                <!-- 1D vs 2D vs Diamond Mode Switcher -->
                 <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-700/80 shadow-inner">
-                    <button data-dim="1" class="dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white">
+                    <button data-mode="1d" class="dim-btn px-2.5 sm:px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white">
                         1D Line
                     </button>
-                    <button data-dim="2" class="dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40">
+                    <button data-mode="2d" class="dim-btn px-2.5 sm:px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40">
                         2D Quadtree
+                    </button>
+                    <button data-mode="diamond" class="dim-btn px-2.5 sm:px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white" title="45°-rotated board: Up / Down / Left / Right via Arrow keys or WASD">
+                        ◆ Diamond
                     </button>
                 </div>
             </div>
@@ -318,7 +321,7 @@
                 </button>
             </div>
 
-            <!-- 2D QUADRANT CONTROLS (Shown in 2D Mode — Plus Direct Canvas Quadrant Click!) -->
+            <!-- 2D QUADRANT CONTROLS (Shown in Standard 2D Mode — Plus Direct Canvas Quadrant Click!) -->
             <div id="controls2D" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
                 <button data-quad="NW" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-cyan-500/40 hover:border-cyan-400 p-3 flex items-center justify-between shadow-md">
                     <div class="flex items-center gap-2.5">
@@ -328,7 +331,7 @@
                             <div class="text-[10px] font-mono-num text-slate-400">Top-Left</div>
                         </div>
                     </div>
-                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-cyan-300">Q / 7</kbd>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-xs font-bold text-cyan-300">E</kbd>
                 </button>
 
                 <button data-quad="NE" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-sky-500/40 hover:border-sky-400 p-3 flex items-center justify-between shadow-md">
@@ -339,7 +342,7 @@
                             <div class="text-[10px] font-mono-num text-slate-400">Top-Right</div>
                         </div>
                     </div>
-                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-sky-300">W / 9</kbd>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-xs font-bold text-sky-300">I</kbd>
                 </button>
 
                 <button data-quad="SW" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-indigo-500/40 hover:border-indigo-400 p-3 flex items-center justify-between shadow-md">
@@ -350,7 +353,7 @@
                             <div class="text-[10px] font-mono-num text-slate-400">Bottom-Left</div>
                         </div>
                     </div>
-                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-indigo-300">A / 1</kbd>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-xs font-bold text-indigo-300">F</kbd>
                 </button>
 
                 <button data-quad="SE" class="quad-btn btn-slice rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-amber-500/40 hover:border-amber-400 p-3 flex items-center justify-between shadow-md">
@@ -361,7 +364,54 @@
                             <div class="text-[10px] font-mono-num text-slate-400">Bottom-Right</div>
                         </div>
                     </div>
-                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[11px] text-amber-300">S / 3</kbd>
+                    <kbd class="px-2 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-xs font-bold text-amber-300">J</kbd>
+                </button>
+            </div>
+
+            <!-- 2D DIAMOND CONTROLS (Shown in 45°-Rotated Diamond Mode — Arrow Keys / WASD / D-Pad!) -->
+            <div id="controlsDiamond" class="hidden grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
+                <button data-quad="NW" class="quad-btn btn-slice col-start-2 sm:col-start-auto rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-cyan-500/40 hover:border-cyan-400 p-2 sm:p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center text-cyan-300 font-mono-num font-bold text-sm">↑</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">Up<span class="hidden md:inline"> Quad</span></div>
+                            <div class="hidden sm:block text-[10px] font-mono-num text-slate-400">Top Wedge</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[10px] sm:text-[11px] text-cyan-300">↑/W</kbd>
+                </button>
+
+                <button data-quad="SW" class="quad-btn btn-slice col-start-1 row-start-2 sm:col-start-auto sm:row-start-auto rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-indigo-500/40 hover:border-indigo-400 p-2 sm:p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-500/15 border border-indigo-400/40 flex items-center justify-center text-indigo-300 font-mono-num font-bold text-sm">←</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">Left<span class="hidden md:inline"> Quad</span></div>
+                            <div class="hidden sm:block text-[10px] font-mono-num text-slate-400">Left Wedge</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[10px] sm:text-[11px] text-indigo-300">←/A</kbd>
+                </button>
+
+                <button data-quad="SE" class="quad-btn btn-slice col-start-2 row-start-2 sm:col-start-auto sm:row-start-auto rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-amber-500/40 hover:border-amber-400 p-2 sm:p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-amber-300 font-mono-num font-bold text-sm">↓</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">Down<span class="hidden md:inline"> Quad</span></div>
+                            <div class="hidden sm:block text-[10px] font-mono-num text-slate-400">Bottom Wedge</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[10px] sm:text-[11px] text-amber-300">↓/S</kbd>
+                </button>
+
+                <button data-quad="NE" class="quad-btn btn-slice col-start-3 row-start-2 sm:col-start-auto sm:row-start-auto rounded-xl bg-slate-900/95 hover:bg-slate-800/90 border-2 border-sky-500/40 hover:border-sky-400 p-2 sm:p-3 flex items-center justify-between shadow-md">
+                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                        <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-500/15 border border-sky-400/40 flex items-center justify-center text-sky-300 font-mono-num font-bold text-sm">→</span>
+                        <div class="text-left">
+                            <div class="text-xs sm:text-sm font-extrabold text-white">Right<span class="hidden md:inline"> Quad</span></div>
+                            <div class="hidden sm:block text-[10px] font-mono-num text-slate-400">Right Wedge</div>
+                        </div>
+                    </div>
+                    <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 font-mono-num text-[10px] sm:text-[11px] text-sky-300">→/D</kbd>
                 </button>
             </div>
         </section>
@@ -446,11 +496,11 @@
                         <ul class="space-y-2 text-xs text-slate-300">
                             <li class="flex items-start gap-2">
                                 <span class="text-cyan-400 font-bold">▸</span>
-                                <div><strong class="text-white">Tap the Arena Directly (Fastest):</strong> Tap straight on the quadrant (<code class="text-cyan-300 font-mono-num">NW</code>, <code class="text-sky-300 font-mono-num">NE</code>, <code class="text-indigo-300 font-mono-num">SW</code>, <code class="text-amber-300 font-mono-num">SE</code>) or half (<code class="text-cyan-300 font-mono-num">Left</code> / <code class="text-amber-300 font-mono-num">Right</code>) where the glowing orb sits.</div>
+                                <div><strong class="text-white">Tap the Arena Directly (Fastest):</strong> Tap straight on the quadrant (<code class="text-cyan-300 font-mono-num">NW</code>/<code class="text-sky-300 font-mono-num">NE</code>/<code class="text-indigo-300 font-mono-num">SW</code>/<code class="text-amber-300 font-mono-num">SE</code>), diamond wedge (<code class="text-cyan-300 font-mono-num">Up</code>/<code class="text-amber-300 font-mono-num">Down</code>/<code class="text-indigo-300 font-mono-num">Left</code>/<code class="text-sky-300 font-mono-num">Right</code>), or 1D half where the glowing orb sits.</div>
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="text-cyan-400 font-bold">▸</span>
-                                <div><strong class="text-white">Two-Thumb Button Deck:</strong> Or tap the large tactile quadrant/bisect buttons below the canvas so your fingers never cover the arena.</div>
+                                <div><strong class="text-white">Thumb Deck &amp; D-Pad:</strong> Or tap the tactile quadrant buttons or <strong class="text-cyan-300">◆ Diamond D-Pad</strong> below the canvas so your fingers never cover the arena.</div>
                             </li>
                             <li class="flex items-start gap-2">
                                 <span class="text-cyan-400 font-bold">▸</span>
@@ -472,7 +522,7 @@
                                 <span class="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-sm">💻</span>
                                 <div>
                                     <h3 class="text-sm font-extrabold text-white">On Computer (PC / Mac)</h3>
-                                    <p class="text-[10px] font-mono-num text-amber-300">2×2 Key Matrix &amp; Mouse Click</p>
+                                    <p class="text-[10px] font-mono-num text-amber-300">Ergonomic Home-Row, WASD / Arrows &amp; Mouse</p>
                                 </div>
                             </div>
                             <span class="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 font-mono-num text-[10px] text-amber-300">Keyboard / Mouse</span>
@@ -480,23 +530,45 @@
 
                         <div class="space-y-2 text-xs text-slate-300">
                             <div>
-                                <div class="text-[11px] font-bold text-white mb-1">2D Quadtree Hotkeys (2×2 Left-Hand or Numpad):</div>
+                                <div class="text-[11px] font-bold text-white mb-1">2D Quadtree Hotkeys (Two-Handed Home-Row):</div>
                                 <div class="grid grid-cols-2 gap-1.5 font-mono-num text-[11px]">
                                     <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
                                         <span class="text-cyan-300">↖ NW (Top-L)</span>
-                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">Q / 7</kbd>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">E</kbd>
                                     </div>
                                     <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
                                         <span class="text-sky-300">↗ NE (Top-R)</span>
-                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">W / 9</kbd>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">I</kbd>
                                     </div>
                                     <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
                                         <span class="text-indigo-300">↙ SW (Bot-L)</span>
-                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">A / 1</kbd>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">F</kbd>
                                     </div>
                                     <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
                                         <span class="text-amber-300">↘ SE (Bot-R)</span>
-                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">S / 3</kbd>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">J</kbd>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="text-[11px] font-bold text-white mb-1">◆ 2D Diamond Hotkeys (45° Rotated Board):</div>
+                                <div class="grid grid-cols-2 gap-1.5 font-mono-num text-[11px]">
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-cyan-300">↑ Up</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">↑ / W</kbd>
+                                    </div>
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-amber-300">↓ Down</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">↓ / S</kbd>
+                                    </div>
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-indigo-300">← Left</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">← / A</kbd>
+                                    </div>
+                                    <div class="px-2 py-1 rounded bg-slate-900 border border-slate-800 flex items-center justify-between">
+                                        <span class="text-sky-300">→ Right</span>
+                                        <kbd class="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-700 text-white font-bold">→ / D</kbd>
                                     </div>
                                 </div>
                             </div>
@@ -686,7 +758,9 @@
         const MAX_LIVES = 3;
 
         const state = {
-            dimensions: 2,             // 1 (1D Line) | 2 (2D Quadtree)
+            arenaMode: '2d',           // '1d' (1D Line) | '2d' (2D Quadtree) | 'diamond' (45°-Rotated 2D Diamond)
+            dimensions: 2,             // 1 (1D Line) | 2 (2D Quadtree / 2D Diamond)
+            diamondMode: false,        // true when arenaMode === 'diamond'
             paceMode: 'adaptive',      // 'adaptive' | 'blitz' | 'relaxed' | 'zen'
             targetMode: 'random',      // 'random' | 'pi' | 'phi'
             midlineMode: 'multidepth', // 'multidepth' (1°/2°/3°) | 'demarcated' (1° only) | 'ghost' | 'hidden'
@@ -702,12 +776,13 @@
             targetY: EXACT_PHI,
 
             // Normalized position in [0, 1] within current interval
-            // Note: relY = 0 is TOP of canvas (NW/NE), relY = 1 is BOTTOM of canvas (SW/SE)
+            // Note: relY = 0 is TOP of square board (NW/NE), relY = 1 is BOTTOM (SW/SE)
+            // In 45°-rotated Diamond mode: NW -> UP, NE -> RIGHT, SE -> DOWN, SW -> LEFT
             relX: 0.5,
             relY: 0.5,
 
             depth: 0,
-            bestDepth: { '1': 0, '2': 0 },
+            bestDepth: { '1d': 0, '2d': 0, 'diamond': 0 },
             history: [],
 
             // 3-Life System
@@ -857,23 +932,26 @@
 
         function syncDimensionUI() {
             const is2D = state.dimensions === 2;
-            document.getElementById('brandSymbol').textContent = is2D ? '2D' : '1D';
-            document.getElementById('arenaModeTag').textContent = is2D ? '2D QUADTREE' : '1D LINE';
+            const isDiamond = state.diamondMode;
+
+            document.getElementById('brandSymbol').textContent = isDiamond ? '◆' : (is2D ? '2D' : '1D');
+            document.getElementById('arenaModeTag').textContent = isDiamond
+                ? '2D DIAMOND'
+                : (is2D ? '2D QUADTREE' : '1D LINE');
             document.getElementById('boundsReadoutY').style.display = is2D ? 'inline' : 'none';
 
             const c1d = document.getElementById('controls1D');
             const c2d = document.getElementById('controls2D');
-            if (is2D) {
-                c1d.classList.add('hidden');
-                c1d.classList.remove('grid');
-                c2d.classList.remove('hidden');
-                c2d.classList.add('grid');
-            } else {
-                c2d.classList.add('hidden');
-                c2d.classList.remove('grid');
-                c1d.classList.remove('hidden');
-                c1d.classList.add('grid');
-            }
+            const cDiamond = document.getElementById('controlsDiamond');
+
+            [c1d, c2d, cDiamond].forEach((el) => {
+                el.classList.add('hidden');
+                el.classList.remove('grid');
+            });
+
+            const activeDeck = !is2D ? c1d : (isDiamond ? cDiamond : c2d);
+            activeDeck.classList.remove('hidden');
+            activeDeck.classList.add('grid');
         }
 
         function showStatusToast(message) {
@@ -950,8 +1028,8 @@
 
             state.depth++;
             state.history.push(sideKey);
-            if (state.depth > state.bestDepth['1']) {
-                state.bestDepth['1'] = state.depth;
+            if (state.depth > state.bestDepth['1d']) {
+                state.bestDepth['1d'] = state.depth;
             }
 
             state.relX = computeRelPos(state.targetX, state.lowX, state.highX);
@@ -974,6 +1052,9 @@
             updateHUD();
         }
 
+        const DIAMOND_DIR_NAME = { NW: 'UP', NE: 'RIGHT', SE: 'DOWN', SW: 'LEFT' };
+        const DIAMOND_DIR_SYMBOL = { NW: '↑', NE: '→', SE: '↓', SW: '←' };
+
         // Execute 2D Quadrant Cut ('NW', 'NE', 'SW', 'SE')
         function handleCut2D(quadKey) {
             if (state.gameOver || state.isPaused) return;
@@ -987,11 +1068,12 @@
             const correctQuad = (isNorth ? 'N' : 'S') + (isWest ? 'W' : 'E');
 
             if (quadKey !== correctQuad) {
-                loseLife(`WRONG QUADRANT (${quadKey})! -1 LIFE`, quadKey);
+                const chosenLabel = state.diamondMode ? DIAMOND_DIR_NAME[quadKey] : quadKey;
+                loseLife(`WRONG QUADRANT (${chosenLabel})! -1 LIFE`, quadKey);
                 return;
             }
 
-            // Valid 2D Quadtree cut!
+            // Valid 2D Quadtree / Diamond cut!
             if (!state.runStarted) {
                 state.runStarted = true;
                 state.firstCutTime = now;
@@ -1008,9 +1090,10 @@
             else state.lowY = midY;
 
             state.depth++;
-            state.history.push(quadKey);
-            if (state.depth > state.bestDepth['2']) {
-                state.bestDepth['2'] = state.depth;
+            const stepToken = state.diamondMode ? DIAMOND_DIR_SYMBOL[quadKey] : quadKey;
+            state.history.push(stepToken);
+            if (state.depth > state.bestDepth[state.arenaMode]) {
+                state.bestDepth[state.arenaMode] = state.depth;
             }
 
             state.relX = computeRelPos(state.targetX, state.lowX, state.highX);
@@ -1065,7 +1148,9 @@
             const lockX = computeLockedPrefix(state.lowX, state.highX, state.targetX);
             const digitsX = Math.max(1, lockX.lockedChars - 1);
             document.getElementById('modalDigits').textContent = `${digitsX} digits`;
-            document.getElementById('modalMode').textContent = state.dimensions === 2 ? '2D Quadtree' : '1D Line';
+            document.getElementById('modalMode').textContent = state.diamondMode
+                ? '2D Diamond'
+                : (state.dimensions === 2 ? '2D Quadtree' : '1D Line');
 
             modal.classList.remove('hidden');
         }
@@ -1130,8 +1215,7 @@
 
             // Depth & Zoom Scale
             document.getElementById('depthEl').textContent = state.depth;
-            const dimKey = String(state.dimensions);
-            document.getElementById('bestDepthEl').textContent = `Best: ${state.bestDepth[dimKey]}`;
+            document.getElementById('bestDepthEl').textContent = `Best: ${state.bestDepth[state.arenaMode]}`;
             document.getElementById('zoomScaleEl').textContent = state.depth === 0
                 ? '1x'
                 : (state.depth <= 14 ? `${(2 ** state.depth).toLocaleString()}x` : `2^${state.depth}x`);
@@ -1333,7 +1417,11 @@
             }
 
             if (state.dimensions === 2) {
-                drawArena2D(W, H, now, palette, midAlpha);
+                if (state.diamondMode) {
+                    drawArenaDiamond(W, H, now, palette, midAlpha);
+                } else {
+                    drawArena2D(W, H, now, palette, midAlpha);
+                }
             } else {
                 drawArena1D(W, H, now, palette, midAlpha);
             }
@@ -1368,6 +1456,15 @@
                 if (state.hoverZone === 'SE') ctx.fillRect(midX, midY, boxW * 0.5, boxH * 0.5);
             }
 
+            // Highlight Wrong Quadrant briefly on misclick/miskpress
+            if (now < state.hurtFlashUntil && state.wrongZoneFlash) {
+                ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
+                if (state.wrongZoneFlash === 'NW') ctx.fillRect(padX, padY, boxW * 0.5, boxH * 0.5);
+                if (state.wrongZoneFlash === 'NE') ctx.fillRect(midX, padY, boxW * 0.5, boxH * 0.5);
+                if (state.wrongZoneFlash === 'SW') ctx.fillRect(padX, midY, boxW * 0.5, boxH * 0.5);
+                if (state.wrongZoneFlash === 'SE') ctx.fillRect(midX, midY, boxW * 0.5, boxH * 0.5);
+            }
+
             // Outer 2D Bounding Box
             ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.45)`;
             ctx.lineWidth = 2;
@@ -1375,13 +1472,13 @@
 
             // Corner Quadrant Watermarks (NW shifted right of the top-left suspended hearts)
             ctx.font = '700 11px "JetBrains Mono", monospace';
-            ctx.fillStyle = 'rgba(100, 116, 139, 0.45)';
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.48)';
             ctx.textAlign = 'left';
-            ctx.fillText('NW [Q]', padX + 92, padY + 20);
-            ctx.fillText('SW [A]', padX + 10, padY + boxH - 10);
+            ctx.fillText('NW [E]', padX + 92, padY + 20);
+            ctx.fillText('SW [F]', padX + 10, padY + boxH - 10);
             ctx.textAlign = 'right';
-            ctx.fillText('NE [W]', padX + boxW - 10, padY + 20);
-            ctx.fillText('SE [S]', padX + boxW - 10, padY + boxH - 10);
+            ctx.fillText('NE [I]', padX + boxW - 10, padY + 20);
+            ctx.fillText('SE [J]', padX + boxW - 10, padY + boxH - 10);
 
             // Multi-Depth Foresight Crosshairs (Primary 1/2, Secondary 1/4 & 3/4, Tertiary 1/8..7/8)
             if (midAlpha > 0.01) {
@@ -1467,6 +1564,184 @@
             const orbY = padY + state.anim.currY * boxH;
 
             drawTargetOrbWithUrgencyCue(orbX, orbY, now, palette);
+        }
+
+        /**
+         * 2D DIAMOND ARENA RENDERER (45°-ROTATED BOARD: UP, DOWN, LEFT, RIGHT)
+         */
+        function drawArenaDiamond(W, H, now, palette, midAlpha) {
+            const cx = W * 0.5;
+            const cy = H * 0.5;
+            const padX = W < 440 ? 54 : 88;
+            const padY = 26;
+            const R = Math.max(58, Math.min(W * 0.5 - padX, H * 0.5 - padY));
+
+            // Map normalized (u, v) in [0, 1]^2 rotated +45° clockwise onto canvas (x, y):
+            // (0, 0) -> Top, (1, 0) -> Right, (1, 1) -> Bottom, (0, 1) -> Left
+            const uvPt = (u, v) => ({
+                x: cx + (u - v) * R,
+                y: cy + (u + v - 1) * R
+            });
+
+            const fillSubDiamond = (u0, u1, v0, v1, fillStyle) => {
+                const p0 = uvPt(u0, v0);
+                const p1 = uvPt(u1, v0);
+                const p2 = uvPt(u1, v1);
+                const p3 = uvPt(u0, v1);
+                ctx.fillStyle = fillStyle;
+                ctx.beginPath();
+                ctx.moveTo(p0.x, p0.y);
+                ctx.lineTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.lineTo(p3.x, p3.y);
+                ctx.closePath();
+                ctx.fill();
+            };
+
+            const quadBounds = {
+                NW: [0, 0.5, 0, 0.5],   // UP
+                NE: [0.5, 1, 0, 0.5],   // RIGHT
+                SE: [0.5, 1, 0.5, 1],   // DOWN
+                SW: [0, 0.5, 0.5, 1]    // LEFT
+            };
+
+            // Highlight Hovered Sub-Diamond
+            if (!state.gameOver && state.hoverZone && quadBounds[state.hoverZone]) {
+                const [u0, u1, v0, v1] = quadBounds[state.hoverZone];
+                fillSubDiamond(u0, u1, v0, v1, 'rgba(56, 189, 248, 0.055)');
+            }
+
+            // Highlight Wrong Sub-Diamond briefly on misclick/miskpress
+            if (now < state.hurtFlashUntil && state.wrongZoneFlash && quadBounds[state.wrongZoneFlash]) {
+                const [u0, u1, v0, v1] = quadBounds[state.wrongZoneFlash];
+                fillSubDiamond(u0, u1, v0, v1, 'rgba(244, 63, 94, 0.22)');
+            }
+
+            // Outer 45°-Rotated Diamond Bounding Box
+            const topV = uvPt(0, 0);
+            const rightV = uvPt(1, 0);
+            const bottomV = uvPt(1, 1);
+            const leftV = uvPt(0, 1);
+
+            ctx.strokeStyle = `rgba(${palette.r}, ${palette.g}, ${palette.b}, 0.5)`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(topV.x, topV.y);
+            ctx.lineTo(rightV.x, rightV.y);
+            ctx.lineTo(bottomV.x, bottomV.y);
+            ctx.lineTo(leftV.x, leftV.y);
+            ctx.closePath();
+            ctx.stroke();
+
+            // Compass Tip Watermarks outside the 4 Diamond Vertices
+            ctx.font = '700 11px "JetBrains Mono", monospace';
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.58)';
+            const compactLabels = W < 460;
+
+            ctx.textAlign = 'center';
+            ctx.fillText('▲ UP [↑/W]', cx, topV.y - 8);
+            ctx.fillText('▼ DOWN [↓/S]', cx, bottomV.y + 16);
+
+            ctx.textAlign = 'right';
+            ctx.fillText(compactLabels ? '◀ ←/A' : '◀ LEFT [←/A]', leftV.x - 8, cy + 4);
+
+            ctx.textAlign = 'left';
+            ctx.fillText(compactLabels ? '→/D ▶' : '[→/D] RIGHT ▶', rightV.x + 8, cy + 4);
+
+            // Multi-Depth Foresight Crosshairs (Rotated 45° along u and v axes)
+            if (midAlpha > 0.01) {
+                const showSubCrosshairs = state.midlineMode === 'multidepth' || state.midlineMode === 'ghost';
+                const isUrgent = state.runStarted && state.timerRatio < 0.5;
+                const baseR = isUrgent ? palette.r : 251;
+                const baseG = isUrgent ? palette.g : 191;
+                const baseB = isUrgent ? palette.b : 36;
+
+                // 1. TERTIARY CROSSHAIRS (Depth +3: 1/8, 3/8, 5/8, 7/8)
+                if (showSubCrosshairs) {
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.19})`;
+                    ctx.lineWidth = 1.0;
+                    ctx.setLineDash([2, 5]);
+                    const tertiaryFracs = [0.125, 0.375, 0.625, 0.875];
+                    ctx.beginPath();
+                    for (const f of tertiaryFracs) {
+                        const uStart = uvPt(f, 0);
+                        const uEnd = uvPt(f, 1);
+                        ctx.moveTo(uStart.x, uStart.y);
+                        ctx.lineTo(uEnd.x, uEnd.y);
+
+                        const vStart = uvPt(0, f);
+                        const vEnd = uvPt(1, f);
+                        ctx.moveTo(vStart.x, vStart.y);
+                        ctx.lineTo(vEnd.x, vEnd.y);
+                    }
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // 2. SECONDARY CROSSHAIRS (Depth +2: 1/4, 3/4)
+                    ctx.save();
+                    ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.44})`;
+                    ctx.lineWidth = 1.35;
+                    ctx.setLineDash([4, 4]);
+                    const secondaryFracs = [
+                        { f: 0.25, label: '¼' },
+                        { f: 0.75, label: '¾' }
+                    ];
+                    ctx.beginPath();
+                    for (const { f } of secondaryFracs) {
+                        const uStart = uvPt(f, 0);
+                        const uEnd = uvPt(f, 1);
+                        ctx.moveTo(uStart.x, uStart.y);
+                        ctx.lineTo(uEnd.x, uEnd.y);
+
+                        const vStart = uvPt(0, f);
+                        const vEnd = uvPt(1, f);
+                        ctx.moveTo(vStart.x, vStart.y);
+                        ctx.lineTo(vEnd.x, vEnd.y);
+                    }
+                    ctx.stroke();
+
+                    ctx.font = '600 10px "JetBrains Mono", monospace';
+                    ctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.55})`;
+                    ctx.textAlign = 'center';
+                    for (const { f, label } of secondaryFracs) {
+                        const tr = uvPt(f, 0);
+                        const tl = uvPt(0, f);
+                        ctx.fillText(label, tr.x + 9, tr.y - 5);
+                        ctx.fillText(label, tl.x - 9, tl.y - 5);
+                    }
+                    ctx.restore();
+                }
+
+                // 3. PRIMARY CROSSHAIR (Depth +1: 1/2 — X-Crosshair Dividing Up / Down / Left / Right)
+                ctx.save();
+                ctx.strokeStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.88})`;
+                ctx.lineWidth = 2.0;
+                ctx.setLineDash([7, 5]);
+
+                const uMid0 = uvPt(0.5, 0);
+                const uMid1 = uvPt(0.5, 1);
+                const vMid0 = uvPt(0, 0.5);
+                const vMid1 = uvPt(1, 0.5);
+
+                ctx.beginPath();
+                ctx.moveTo(uMid0.x, uMid0.y);
+                ctx.lineTo(uMid1.x, uMid1.y);
+                ctx.moveTo(vMid0.x, vMid0.y);
+                ctx.lineTo(vMid1.x, vMid1.y);
+                ctx.stroke();
+
+                ctx.font = '700 11px "JetBrains Mono", monospace';
+                ctx.fillStyle = `rgba(${baseR}, ${baseG}, ${baseB}, ${midAlpha * 0.9})`;
+                ctx.textAlign = 'center';
+                ctx.fillText('½', uMid0.x + 10, uMid0.y - 5);
+                ctx.fillText('½', vMid0.x - 10, vMid0.y - 5);
+                ctx.restore();
+            }
+
+            // Target Point Position in 45°-Rotated Diamond Arena
+            const orb = uvPt(state.anim.currX, state.anim.currY);
+            drawTargetOrbWithUrgencyCue(orb.x, orb.y, now, palette);
         }
 
         /**
@@ -1644,13 +1919,19 @@
 
         function getZoneFromPointer(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
-            const normX = (clientX - rect.left) / rect.width;
-            const normY = (clientY - rect.top) / rect.height;
+            const px = clientX - rect.left;
+            const py = clientY - rect.top;
             if (state.dimensions === 1) {
-                return normX < 0.5 ? 'L' : 'R';
+                return px < rect.width * 0.5 ? 'L' : 'R';
+            } else if (state.diamondMode) {
+                const dx = px - rect.width * 0.5;
+                const dy = py - rect.height * 0.5;
+                const isWest = (dx + dy) < 0;
+                const isNorth = (dy - dx) < 0;
+                return (isNorth ? 'N' : 'S') + (isWest ? 'W' : 'E');
             } else {
-                const isWest = normX < 0.5;
-                const isNorth = normY < 0.5;
+                const isWest = px < rect.width * 0.5;
+                const isNorth = py < rect.height * 0.5;
                 return (isNorth ? 'N' : 'S') + (isWest ? 'W' : 'E');
             }
         }
@@ -1776,6 +2057,14 @@
             btn.addEventListener('click', () => setHelpTab(btn.dataset.helpTab));
         });
 
+        function flashSliceBtn(selector) {
+            const btn = document.querySelector(selector);
+            if (!btn) return;
+            btn.classList.add('active-press');
+            clearTimeout(btn._pressTimer);
+            btn._pressTimer = setTimeout(() => btn.classList.remove('active-press'), 95);
+        }
+
         // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => {
             if (e.repeat) return;
@@ -1805,28 +2094,64 @@
             if (state.dimensions === 1) {
                 if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
                     e.preventDefault();
+                    flashSliceBtn('#btnLeft1D');
                     handleCut1D('L');
                 } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
                     e.preventDefault();
+                    flashSliceBtn('#btnRight1D');
                     handleCut1D('R');
+                }
+            } else if (state.diamondMode) {
+                if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                    e.preventDefault();
+                    flashSliceBtn('#controlsDiamond [data-quad="NW"]');
+                    handleCut2D('NW');
+                } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                    e.preventDefault();
+                    flashSliceBtn('#controlsDiamond [data-quad="NE"]');
+                    handleCut2D('NE');
+                } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    flashSliceBtn('#controlsDiamond [data-quad="SE"]');
+                    handleCut2D('SE');
+                } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                    e.preventDefault();
+                    flashSliceBtn('#controlsDiamond [data-quad="SW"]');
+                    handleCut2D('SW');
                 }
             } else {
                 const k = e.key.toUpperCase();
-                if (k === 'Q' || k === '7') { e.preventDefault(); handleCut2D('NW'); }
-                else if (k === 'W' || k === 'E' || k === '9') { e.preventDefault(); handleCut2D('NE'); }
-                else if (k === 'A' || k === '1') { e.preventDefault(); handleCut2D('SW'); }
-                else if (k === 'S' || k === 'D' || k === '3') { e.preventDefault(); handleCut2D('SE'); }
+                if (k === 'E' || k === '7') {
+                    e.preventDefault();
+                    flashSliceBtn('#controls2D [data-quad="NW"]');
+                    handleCut2D('NW');
+                } else if (k === 'I' || k === '9') {
+                    e.preventDefault();
+                    flashSliceBtn('#controls2D [data-quad="NE"]');
+                    handleCut2D('NE');
+                } else if (k === 'F' || k === '1') {
+                    e.preventDefault();
+                    flashSliceBtn('#controls2D [data-quad="SW"]');
+                    handleCut2D('SW');
+                } else if (k === 'J' || k === '3') {
+                    e.preventDefault();
+                    flashSliceBtn('#controls2D [data-quad="SE"]');
+                    handleCut2D('SE');
+                }
             }
         });
 
-        // Top Bar Controls: 1D vs 2D Dimension Switcher
+        // Top Bar Controls: 1D vs 2D vs Diamond Mode Switcher
         document.querySelectorAll('.dim-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
-                state.dimensions = parseInt(btn.dataset.dim, 10);
+                const mode = btn.dataset.mode;
+                state.arenaMode = mode;
+                state.dimensions = mode === '1d' ? 1 : 2;
+                state.diamondMode = mode === 'diamond';
                 document.querySelectorAll('.dim-btn').forEach((b) => {
-                    b.className = 'dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white';
+                    b.className = 'dim-btn px-2.5 sm:px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition text-slate-400 hover:text-white';
                 });
-                btn.className = 'dim-btn px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40';
+                btn.className = 'dim-btn px-2.5 sm:px-3 py-1 rounded-lg font-mono-num text-xs font-bold transition bg-cyan-500 text-slate-950 shadow-sm shadow-cyan-500/40';
                 initGame();
             });
         });
